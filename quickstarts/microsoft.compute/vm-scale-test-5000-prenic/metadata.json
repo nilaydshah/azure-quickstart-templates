@@ -1,0 +1,7 @@
+{
+    "itemDisplayName": "5000 VM Scale Test (Pre-created NICs)",
+    "description": "Deploys 5000 individual VMs with pre-created NICs to eliminate ARM NIC throttling. Two-phase deployment: NICs first, then VMs referencing existing NICs. Each VM has 1 OS disk and 2 Premium V2 SSD data disks.",
+    "summary": "Scale test deploying 5000 VMs using a two-phase approach (NICs → VMs) to avoid ARM rate limiting.",
+    "githubUsername": "nilaydshah",
+    "dateUpdated": "2026-02-25"
+}

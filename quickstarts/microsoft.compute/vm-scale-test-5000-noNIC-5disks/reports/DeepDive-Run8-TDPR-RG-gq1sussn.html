@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Dive Report — Run 8 (TDPR-RG-gq1sussn) — 5K VMs × 3 Data Disks</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;--yellow:#d29922;--blue:#58a6ff;--purple:#bc8cff;--orange:#f0883e;--cyan:#39d2c0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.6;padding:24px}
+.container{max-width:1400px;margin:0 auto}
+h1{font-size:26px;margin-bottom:8px;color:var(--blue)}
+h2{font-size:20px;margin:32px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);color:var(--blue)}
+h3{font-size:16px;margin:20px 0 10px;color:var(--purple)}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px}
+.grid{display:grid;gap:16px;margin-bottom:24px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-5{grid-template-columns:repeat(5,1fr)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+.metric-card{text-align:center}
+.metric-value{font-size:32px;font-weight:bold}
+.metric-label{color:var(--muted);font-size:12px;margin-top:4px}
+.success{color:var(--green)}.warning{color:var(--yellow)}.danger{color:var(--red)}.info{color:var(--blue)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:#1c2128;text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+td{padding:8px 12px;border-bottom:1px solid var(--border)}
+tr:hover{background:#1c2128}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
+.badge-green{background:rgba(63,185,80,.15);color:var(--green)}
+.badge-red{background:rgba(248,81,73,.15);color:var(--red)}
+.badge-yellow{background:rgba(210,153,34,.15);color:var(--yellow)}
+.badge-blue{background:rgba(88,166,255,.15);color:var(--blue)}
+.section-note{background:rgba(88,166,255,.08);border-left:3px solid var(--blue);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.bottleneck{background:rgba(248,81,73,.08);border-left:3px solid var(--red);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.insight{background:rgba(63,185,80,.08);border-left:3px solid var(--green);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.chart-container{position:relative;height:320px}
+code{background:#21262d;padding:2px 6px;border-radius:4px;font-size:12px;font-family:'Cascadia Code','Fira Code',monospace}
+@media(max-width:900px){.grid-4,.grid-5{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔬 Deep Dive Report — Run 8</h1>
+<div class="subtitle">
+  Resource Group: <strong>TDPR-RG-gq1sussn</strong> | Subscription: <strong>b883903d (Reimage2)</strong> | Region: <strong>EastUS2EUAP</strong><br>
+  Time Window: <strong>2026-02-25 23:38 – 00:04 UTC</strong> | VMs: <strong>4,994 created (target 5,000)</strong> | Approach: <strong>NoNIC + 3 Data Disks</strong><br>
+  Disks per VM: <strong>4 (1 OS + 3 PremiumV2_LRS)</strong> | Total Disks: <strong>15,040</strong> | Generated: 2026-02-26<br>
+  <span class="danger">⚠️ Partial run — hit PremiumV2DiskCount quota (20,000) after ~10K data disks created. Only ~2 of 3 data disks per VM on average.</span>
+</div>
+
+<!-- ============================================================ -->
+<h2>1. Executive Summary</h2>
+<!-- ============================================================ -->
+
+<div class="grid grid-5">
+  <div class="card metric-card">
+    <div class="metric-value warning">4,994</div>
+    <div class="metric-label">VMs Created (of 5,000)</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value info">15,040</div>
+    <div class="metric-label">Disks Created</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value warning">~26 min</div>
+    <div class="metric-label">Total Duration</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value success">0</div>
+    <div class="metric-label">NIC 429s ✅</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value danger">106,500</div>
+    <div class="metric-label">Total ARM 429s</div>
+  </div>
+</div>
+
+<div class="bottleneck">
+  <strong>Quota Issue:</strong> The PremiumV2DiskCount quota in EastUS2EUAP is <strong>20,000</strong>.
+  With 3 data disks × 5,000 VMs = 15,000 needed, we expected to fit. However, the actual run created
+  15,040 disks — indicating partial success. Some VMs had fewer data disks attached due to the quota
+  being consumed by retries/transient allocations. <strong>6 VMs failed to create entirely.</strong>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. ARM Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<div class="grid grid-4">
+  <div class="card metric-card">
+    <div class="metric-value info">895,593</div>
+    <div class="metric-label">Total ARM Requests</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value success">207,640</div>
+    <div class="metric-label">Succeeded (2xx)</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value danger">106,500</div>
+    <div class="metric-label">Throttled (429)</div>
+  </div>
+  <div class="card metric-card">
+    <div class="metric-value warning">447,797</div>
+    <div class="metric-label">In-Flight (-1)</div>
+  </div>
+</div>
+
+<h3>2.1 ARM PUT Operations by Resource Type</h3>
+<table>
+  <tr><th>Resource</th><th>Total PUTs</th><th>Success</th><th>429s</th><th>P50 (ms)</th><th>P90 (ms)</th><th>P99 (ms)</th></tr>
+  <tr>
+    <td><span class="badge badge-blue">Disk</span></td>
+    <td><strong>136,246</strong></td>
+    <td>15,040</td>
+    <td class="danger"><strong>53,083</strong></td>
+    <td>19</td><td>140</td><td>410</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-purple">VM</span></td>
+    <td>28,612</td>
+    <td>5,004</td>
+    <td class="danger">9,257</td>
+    <td>48</td><td>2,512</td><td class="danger">11,448</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-green">NIC</span></td>
+    <td>6,016</td>
+    <td>3,008</td>
+    <td class="success">0 ✅</td>
+    <td>96</td><td>291</td><td>555</td>
+  </tr>
+</table>
+
+<div class="bottleneck">
+  <strong>Disk throttling is 5.7× higher than Run 7:</strong> 53,083 disk 429s vs 19,132 in Run 7.
+  With 3 data disks per VM (vs 2), ARM sees 50% more disk PUT requests competing for the same rate limits.
+  The 136K total disk PUTs (vs 68K in Run 7) shows 2× more disk traffic as expected.
+</div>
+
+<h3>2.2 ARM GET Operations by Resource Type</h3>
+<table>
+  <tr><th>Resource</th><th>Total GETs</th><th>Success</th><th>429s</th><th>P50 (ms)</th><th>P90 (ms)</th><th>P99 (ms)</th></tr>
+  <tr>
+    <td><span class="badge badge-purple">VM</span></td>
+    <td><strong>579,737</strong></td><td>124,231</td><td class="danger">32,028</td>
+    <td>9</td><td>119</td><td>1,129</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-blue">Disk</span></td>
+    <td>81,660</td><td>30,985</td><td class="danger">9,845</td>
+    <td>9</td><td>51</td><td>110</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-green">NIC</span></td>
+    <td>63,034</td><td>29,230</td><td class="warning">2,287</td>
+    <td>21</td><td>86</td><td>140</td>
+  </tr>
+</table>
+
+<h3>2.3 ARM PUT Timeline (per minute)</h3>
+<div class="card">
+  <div class="chart-container">
+    <canvas id="armTimeline"></canvas>
+  </div>
+</div>
+
+<table>
+  <tr><th>Time (UTC)</th><th>Total PUTs</th><th>Success</th><th>429s</th><th>P50 (ms)</th><th>P99 (ms)</th></tr>
+  <tr><td>23:38</td><td><strong>62,411</strong></td><td>6,300</td><td class="danger">24,749</td><td>9</td><td>3,072</td></tr>
+  <tr><td>23:39</td><td><strong>84,464</strong></td><td>8,491</td><td class="danger">33,822</td><td>22</td><td>8,272</td></tr>
+  <tr><td>23:40</td><td>19,145</td><td>5,964</td><td class="warning">3,604</td><td>14</td><td>2,012</td></tr>
+  <tr><td>23:41</td><td>4,130</td><td>1,935</td><td>165</td><td>38</td><td>373</td></tr>
+  <tr><td>23:42</td><td>602</td><td>301</td><td class="success">0</td><td>55</td><td>377</td></tr>
+  <tr><td>23:43</td><td>130</td><td>65</td><td class="success">0</td><td>—</td><td>520</td></tr>
+  <tr><td>23:44</td><td>12</td><td>6</td><td class="success">0</td><td>—</td><td>473</td></tr>
+</table>
+
+<div class="section-note">
+  <strong>PUT burst duration: 4 minutes</strong> (23:38–23:41 UTC). 97% of all PUTs completed in the first 3 minutes.
+  The remaining ~22 minutes were async provisioning (CRP processing, disk allocation, VM boot).
+</div>
+
+<!-- ============================================================ -->
+<h2>3. CRP Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<table>
+  <tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>P50</th><th>P90</th><th>P99</th></tr>
+  <tr>
+    <td><strong>VM GET (ModelAndInstanceView)</strong></td>
+    <td>72,142</td><td>41ms</td><td>16</td><td>46</td><td>384</td>
+  </tr>
+  <tr>
+    <td>VM GET (Model)</td>
+    <td>39,591</td><td>4ms</td><td>0</td><td>6</td><td>11</td>
+  </tr>
+  <tr>
+    <td>VMExtensions GET</td>
+    <td>9,251</td><td>1ms</td><td>0</td><td>5</td><td>9</td>
+  </tr>
+  <tr>
+    <td><strong>VM PUT (ResourceOperation)</strong></td>
+    <td><strong>6,465</strong></td><td class="warning">1,807ms</td><td>663</td><td>6,733</td><td class="danger">11,442</td>
+  </tr>
+  <tr>
+    <td>VMInfoInternal GET</td>
+    <td>5,199</td><td>15ms</td><td>0</td><td>5</td><td>11</td>
+  </tr>
+  <tr>
+    <td>AsyncOperationCompletion</td>
+    <td>4,942</td><td>0ms</td><td>0</td><td>0</td><td>5</td>
+  </tr>
+  <tr>
+    <td><strong>DiskRPCallback (AllocateDisks)</strong></td>
+    <td>3,050</td><td>9ms</td><td class="success">2</td><td>7</td><td>61</td>
+  </tr>
+  <tr>
+    <td><strong>NrpCallback (AllocateNIC)</strong></td>
+    <td>2,912</td><td>22ms</td><td class="success">8</td><td>22</td><td>159</td>
+  </tr>
+  <tr>
+    <td>Deployments Preflight</td>
+    <td>58</td><td>423ms</td><td>283</td><td>517</td><td>3,264</td>
+  </tr>
+</table>
+
+<div class="section-note">
+  <strong>CRP VM PUT P50 = 663ms</strong> (vs 794ms in Run 7) — slightly faster despite 50% more disks.
+  NrpCallback count dropped to 2,912 (vs 4,769 in Run 7) — fewer VMs fully completed.
+  DiskRPCallback at 3,050 (vs 4,729 in Run 7) — similarly reduced due to partial completion.
+</div>
+
+<!-- ============================================================ -->
+<h2>4. DiskRP Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<table>
+  <tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>P50</th><th>P90</th><th>P99</th><th>Success</th></tr>
+  <tr>
+    <td>Disks GET (polling)</td>
+    <td><strong>58,268</strong></td><td>1ms</td><td class="success">0</td><td>0</td><td>15</td>
+    <td><span class="badge badge-yellow">81.1%</span></td>
+  </tr>
+  <tr>
+    <td><strong>Disks PUT (callback)</strong></td>
+    <td><strong>15,040</strong></td><td>2ms</td><td class="success">0</td><td>15</td><td>15</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+  <tr>
+    <td>ValidateAndProtectDisks</td>
+    <td>6,530</td><td>6ms</td><td class="success">0</td><td>15</td><td>46</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+  <tr>
+    <td>AllocateDisks</td>
+    <td>5,149</td><td>75ms</td><td>15</td><td>234</td><td>921</td>
+    <td><span class="badge badge-yellow">61.4%</span></td>
+  </tr>
+  <tr>
+    <td>AsyncOperationCompletion</td>
+    <td>3,160</td><td>0ms</td><td class="success">0</td><td>0</td><td>15</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+</table>
+
+<div class="bottleneck">
+  <strong>AllocateDisks success rate dropped to 61.4%</strong> (vs 100% in Run 7). This reflects the PremiumV2DiskCount
+  quota hits — DiskRP tried to allocate disks but was rejected by the quota system. 38.6% of allocation attempts
+  returned errors, likely <code>OperationNotAllowed</code> due to quota exhaustion.
+</div>
+
+<div class="section-note">
+  <strong>DiskRP internal latency is still excellent:</strong> PUT callback at 2ms avg, 100% success for the 15,040
+  disks that were created. The bottleneck was quota, not DiskRP performance.
+</div>
+
+<!-- ============================================================ -->
+<h2>5. Run 7 vs Run 8 Comparison</h2>
+<!-- ============================================================ -->
+
+<table>
+  <tr><th>Metric</th><th>Run 7 (2 disks)</th><th>Run 8 (3 disks)</th><th>Change</th></tr>
+  <tr>
+    <td>VMs Created</td>
+    <td class="success">5,000</td>
+    <td class="warning">4,994</td>
+    <td>-6 (quota)</td>
+  </tr>
+  <tr>
+    <td>Data Disks per VM</td>
+    <td>2</td>
+    <td>3 (target)</td>
+    <td>+50%</td>
+  </tr>
+  <tr>
+    <td>Total Disks Created</td>
+    <td>14,946</td>
+    <td>15,040</td>
+    <td>+0.6%</td>
+  </tr>
+  <tr>
+    <td>Duration</td>
+    <td class="success">25:11</td>
+    <td class="warning">~26 min</td>
+    <td>+1 min</td>
+  </tr>
+  <tr>
+    <td>Total ARM Requests</td>
+    <td>1,166,462</td>
+    <td>895,593</td>
+    <td class="success">-23%</td>
+  </tr>
+  <tr>
+    <td>ARM 429s</td>
+    <td>148,949</td>
+    <td>106,500</td>
+    <td class="success">-28%</td>
+  </tr>
+  <tr>
+    <td>Disk PUT 429s</td>
+    <td>19,132</td>
+    <td class="danger">53,083</td>
+    <td class="danger">+177%</td>
+  </tr>
+  <tr>
+    <td>VM PUT 429s</td>
+    <td>10,310</td>
+    <td>9,257</td>
+    <td class="success">-10%</td>
+  </tr>
+  <tr>
+    <td>NIC 429s</td>
+    <td class="success">0</td>
+    <td class="success">0</td>
+    <td>—</td>
+  </tr>
+  <tr>
+    <td>CRP VM PUT P50</td>
+    <td>794ms</td>
+    <td class="success">663ms</td>
+    <td class="success">-16%</td>
+  </tr>
+  <tr>
+    <td>CRP VM PUT P99</td>
+    <td>10,777ms</td>
+    <td>11,442ms</td>
+    <td>+6%</td>
+  </tr>
+  <tr>
+    <td>DiskRP PUT avg</td>
+    <td>2ms</td>
+    <td>2ms</td>
+    <td>Same</td>
+  </tr>
+  <tr>
+    <td>DiskRP AllocateDisks success</td>
+    <td class="success">100%</td>
+    <td class="danger">61.4%</td>
+    <td class="danger">Quota hit</td>
+  </tr>
+  <tr>
+    <td>ARM PUT burst</td>
+    <td>6 min</td>
+    <td class="success">4 min</td>
+    <td class="success">-33%</td>
+  </tr>
+</table>
+
+<div class="card">
+  <div class="chart-container">
+    <canvas id="comparisonChart"></canvas>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>6. Key Findings</h2>
+<!-- ============================================================ -->
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3 style="color:var(--green)">✅ What Worked</h3>
+    <div class="insight">
+      <strong>NoNIC still effective:</strong> Zero NIC 429s confirmed again. CRP's NrpCallback handles inline NICs with zero throttling.
+    </div>
+    <div class="insight">
+      <strong>ARM PUT burst faster:</strong> All PUTs completed in 4 min (vs 6 min in Run 7) — despite 50% more disk PUTs.
+    </div>
+    <div class="insight">
+      <strong>DiskRP internal performance unchanged:</strong> 2ms avg PUT callback, 100% success for created disks.
+    </div>
+    <div class="insight">
+      <strong>CRP VM PUT improved:</strong> P50 dropped from 794ms → 663ms (-16%).
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--red)">❌ Issues</h3>
+    <div class="bottleneck">
+      <strong>PremiumV2DiskCount quota (20,000):</strong> With 3 data disks × 5K VMs = 15K needed, plus transient/retry allocations, the quota was exhausted. 6 VMs failed, many VMs got fewer than 3 data disks.
+    </div>
+    <div class="bottleneck">
+      <strong>Disk ARM throttling 2.8×:</strong> 53K disk 429s vs 19K — adding 1 more data disk per VM significantly increases ARM pressure on disk PUTs.
+    </div>
+    <div class="bottleneck">
+      <strong>DiskRP AllocateDisks 61.4% success:</strong> Down from 100% — quota rejections propagated as allocation failures.
+    </div>
+  </div>
+</div>
+
+<div class="section-note">
+  <strong>Recommendation:</strong> For future runs with 3+ data disks, request a PremiumV2DiskCount quota increase
+  to at least <strong>25,000</strong> (15K data + 5K OS + buffer for retries). Alternatively, use 2 data disks (Run 7 config)
+  which fits comfortably within the 20K quota.
+</div>
+
+</div>
+
+<script>
+// ARM PUT Timeline
+new Chart(document.getElementById('armTimeline'), {
+  type: 'bar',
+  data: {
+    labels: ['23:38','23:39','23:40','23:41','23:42','23:43','23:44'],
+    datasets: [
+      { label: 'Success', data: [6300,8491,5964,1935,301,65,6], backgroundColor:'#3fb950', stack:'s' },
+      { label: '429 Throttled', data: [24749,33822,3604,165,0,0,0], backgroundColor:'#f85149', stack:'s' },
+      { label: 'Other', data: [31362,42151,9577,2030,301,65,6], backgroundColor:'#30363d', stack:'s' }
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c9d1d9'}},title:{display:true,text:'ARM PUT Requests per Minute (Run 8)',color:'#e6edf3'}},
+    scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}, y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Request Count',color:'#8b949e'}} }
+  }
+});
+
+// Comparison chart
+new Chart(document.getElementById('comparisonChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Disk 429s', 'VM 429s', 'NIC 429s', 'Total 429s'],
+    datasets: [
+      { label: 'Run 7 (2 disks)', data: [19132, 10310, 0, 148949], backgroundColor:'rgba(88,166,255,0.7)' },
+      { label: 'Run 8 (3 disks)', data: [53083, 9257, 0, 106500], backgroundColor:'rgba(248,81,73,0.7)' }
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c9d1d9'}},title:{display:true,text:'ARM 429 Throttling Comparison: Run 7 vs Run 8',color:'#e6edf3'}},
+    scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}, y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'429 Count',color:'#8b949e'}} }
+  }
+});
+</script>
+</body>
+</html>

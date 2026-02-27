@@ -1,0 +1,163 @@
+# TDPR Scale Test — Daily Pipeline
+# Runs 5000 VM scale test with pre-created NICs, collects telemetry, sends reports
+
+trigger: none
+
+schedules:
+  - cron: "0 6 * * *"
+    displayName: "Daily 6 AM UTC"
+    branches:
+      include:
+        - main
+    always: true
+
+parameters:
+  - name: totalVmCount
+    displayName: "Total VMs to Deploy"
+    type: number
+    default: 5000
+  - name: skipCleanup
+    displayName: "Skip Cleanup (keep RG alive)"
+    type: boolean
+    default: false
+  - name: emailRecipients
+    displayName: "Email Recipients"
+    type: string
+    default: "nilay.shah@microsoft.com"
+
+variables:
+  subscriptionId: "b883903d-216e-45b3-98b0-058819ec9224"
+  location: "EastUS2EUAP"
+  azureServiceConnection: "TDPR-ScaleTest-SPN"
+  templateDir: "quickstarts/microsoft.compute/vm-scale-test-5000-prenic"
+
+pool:
+  vmImage: "windows-latest"
+
+stages:
+  - stage: Deploy
+    displayName: "Deploy Scale Test"
+    jobs:
+      - job: DeployVMs
+        displayName: "Deploy 5K VMs (Two-Phase)"
+        timeoutInMinutes: 180
+        steps:
+          - task: AzurePowerShell@5
+            displayName: "Run Deploy-ScaleTest-PreNIC.ps1"
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              ScriptType: FilePath
+              ScriptPath: $(templateDir)/Deploy-ScaleTest-PreNIC.ps1
+              ScriptArguments: >
+                -SubscriptionId $(subscriptionId)
+                -Location $(location)
+                -TotalVmCount ${{ parameters.totalVmCount }}
+                -SkipCleanup
+                -SkipWait
+              azurePowerShellVersion: LatestVersion
+              pwsh: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Run Results"
+            inputs:
+              targetPath: $(templateDir)/reports
+              artifact: "scale-test-results"
+
+  - stage: Telemetry
+    displayName: "Collect Telemetry & Generate Reports"
+    dependsOn: Deploy
+    jobs:
+      - job: WaitAndCollect
+        displayName: "Wait 15 min + Collect Telemetry"
+        timeoutInMinutes: 60
+        steps:
+          - task: PowerShell@2
+            displayName: "Wait 15 minutes for provisioning"
+            inputs:
+              targetType: inline
+              script: |
+                Write-Host "Waiting 15 minutes for all VMs to fully provision..."
+                Start-Sleep -Seconds 900
+                Write-Host "Wait complete."
+
+          - task: AzurePowerShell@5
+            displayName: "Run Invoke-TelemetryCollection.ps1"
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              ScriptType: FilePath
+              ScriptPath: $(templateDir)/Invoke-TelemetryCollection.ps1
+              ScriptArguments: >
+                -ResultsJsonPath $(templateDir)/reports/run-*-results.json
+              azurePowerShellVersion: LatestVersion
+              pwsh: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Reports"
+            inputs:
+              targetPath: $(templateDir)/reports
+              artifact: "scale-test-reports"
+
+  - stage: Notify
+    displayName: "Send Email Reports"
+    dependsOn: Telemetry
+    jobs:
+      - job: SendEmail
+        displayName: "Email Reports"
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifact: "scale-test-reports"
+              path: $(Pipeline.Workspace)/reports
+
+          - task: PowerShell@2
+            displayName: "Send Reports via Email"
+            inputs:
+              targetType: inline
+              script: |
+                $reports = Get-ChildItem "$(Pipeline.Workspace)/reports/*.html" | Select-Object -ExpandProperty FullName
+                if ($reports.Count -gt 0) {
+                    Write-Host "Found $($reports.Count) report(s) to send"
+                    # In production, use Send-MailMessage or Azure Logic App / SendGrid
+                    # For now, just list them as pipeline artifacts
+                    $reports | ForEach-Object { Write-Host "  Report: $_" }
+                    Write-Host "##vso[task.setvariable variable=reportsFound]true"
+                } else {
+                    Write-Warning "No reports found to send"
+                }
+
+  - stage: Cleanup
+    displayName: "Cleanup Resources"
+    dependsOn: Notify
+    condition: and(succeeded(), ne('${{ parameters.skipCleanup }}', 'true'))
+    jobs:
+      - job: DeleteRG
+        displayName: "Delete Resource Group"
+        timeoutInMinutes: 120
+        steps:
+          - task: AzurePowerShell@5
+            displayName: "Delete TDPR Resource Group"
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              ScriptType: InlineScript
+              Inline: |
+                $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "TDPR-RG-*" }
+                foreach ($rg in $rgs) {
+                    Write-Host "Deleting $($rg.ResourceGroupName)..."
+                    # Delete VMs first for faster quota recovery
+                    $vms = Get-AzResource -ResourceGroupName $rg.ResourceGroupName -ResourceType "Microsoft.Compute/virtualMachines"
+                    if ($vms.Count -gt 0) {
+                        Write-Host "  Deleting $($vms.Count) VMs in parallel..."
+                        $vms | ForEach-Object { Remove-AzResource -ResourceId $_.ResourceId -Force -AsJob } | Out-Null
+                        # Wait for VMs to be deleted
+                        do {
+                            Start-Sleep 60
+                            $remaining = (Get-AzResource -ResourceGroupName $rg.ResourceGroupName -ResourceType "Microsoft.Compute/virtualMachines" -ErrorAction SilentlyContinue).Count
+                            Write-Host "  VMs remaining: $remaining"
+                        } while ($remaining -gt 0)
+                    }
+                    # Then delete the RG
+                    Remove-AzResourceGroup -Name $rg.ResourceGroupName -Force -AsJob
+                    Write-Host "  RG deletion initiated for $($rg.ResourceGroupName)"
+                }
+              azurePowerShellVersion: LatestVersion
+              pwsh: true

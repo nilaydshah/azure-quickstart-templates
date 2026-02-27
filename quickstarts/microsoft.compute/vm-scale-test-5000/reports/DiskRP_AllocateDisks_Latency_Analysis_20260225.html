@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiskRP AllocateDisks Latency Analysis Report</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #dee2e6;
+    --text: #212529;
+    --muted: #6c757d;
+    --primary: #0d6efd;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --success: #198754;
+    --info: #0dcaf0;
+    --red-bg: #fff5f5;
+    --yellow-bg: #fffbeb;
+    --green-bg: #f0fdf4;
+    --blue-bg: #eff6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; margin-bottom: 4px; color: var(--text); }
+  h2 { font-size: 1.35rem; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); color: var(--primary); }
+  h3 { font-size: 1.1rem; margin: 20px 0 10px; color: var(--text); }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card-danger { border-left: 4px solid var(--danger); }
+  .card-warning { border-left: 4px solid var(--warning); }
+  .card-info { border-left: 4px solid var(--info); }
+  .card-success { border-left: 4px solid var(--success); }
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .meta-item { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; }
+  .meta-label { font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+  .meta-value { font-size: 0.95rem; font-weight: 600; font-family: 'Cascadia Code', 'Consolas', monospace; word-break: break-all; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+  .kpi-value { font-size: 1.6rem; font-weight: 700; }
+  .kpi-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .kpi-bad .kpi-value { color: var(--danger); }
+  .kpi-warn .kpi-value { color: #e67700; }
+  .kpi-ok .kpi-value { color: var(--success); }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.85rem; }
+  th { background: #f1f3f5; text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
+  td { padding: 7px 10px; border-bottom: 1px solid #eee; }
+  tr:hover { background: #f8f9fa; }
+  .mono { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.82rem; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .highlight-row { background: var(--red-bg) !important; }
+  .callout { padding: 14px 18px; border-radius: 6px; margin: 12px 0; font-size: 0.9rem; }
+  .callout-danger { background: #fee2e2; border-left: 4px solid var(--danger); }
+  .callout-warning { background: #fef3c7; border-left: 4px solid var(--warning); }
+  .callout-info { background: #dbeafe; border-left: 4px solid var(--primary); }
+  .flow-diagram { background: #f8f9fa; border: 1px solid var(--border); border-radius: 6px; padding: 16px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.82rem; line-height: 1.8; white-space: pre; overflow-x: auto; margin: 10px 0; }
+  .pattern-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .pattern-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: white; flex-shrink: 0; }
+  .icon-red { background: var(--danger); }
+  .icon-yellow { background: #e67700; }
+  .icon-blue { background: var(--primary); }
+  .rec-list { list-style: none; padding: 0; }
+  .rec-list li { padding: 10px 14px; border-left: 3px solid var(--primary); margin-bottom: 8px; background: var(--blue-bg); border-radius: 0 6px 6px 0; }
+  .rec-list li strong { color: var(--primary); }
+  pre.kql { background: #1e1e1e; color: #d4d4d4; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+  pre.kql .kw { color: #569cd6; }
+  pre.kql .fn { color: #dcdcaa; }
+  pre.kql .str { color: #ce9178; }
+  pre.kql .cmt { color: #6a9955; }
+  .tag { display: inline-block; margin-right: 4px; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .divider { border: 0; border-top: 1px solid var(--border); margin: 32px 0; }
+  .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
+  .delta-bad { color: var(--danger); font-weight: 700; }
+  .delta-ok { color: var(--success); }
+  .td-right { text-align: right; }
+  .percent-bar { height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; min-width: 80px; }
+  .percent-fill { height: 100%; border-radius: 3px; }
+  .fill-red { background: var(--danger); }
+  .fill-yellow { background: var(--warning); }
+  .fill-green { background: var(--success); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<h1>🔍 DiskRP AllocateDisks Latency Analysis</h1>
+<p class="subtitle">Resource Group: TDPR-RG-h1m94mbp &nbsp;|&nbsp; Region: eastus2euap &nbsp;|&nbsp; February 25, 2026</p>
+
+<!-- Metadata -->
+<div class="meta-grid">
+  <div class="meta-item"><div class="meta-label">Subscription</div><div class="meta-value">b883903d-216e-45b3-98b0-058819ec9224</div></div>
+  <div class="meta-item"><div class="meta-label">Resource Group</div><div class="meta-value">TDPR-RG-h1m94mbp</div></div>
+  <div class="meta-item"><div class="meta-label">Region</div><div class="meta-value">eastus2euap</div></div>
+  <div class="meta-item"><div class="meta-label">Analysis Window</div><div class="meta-value">Feb 20–25, 2026 (5 days)</div></div>
+  <div class="meta-item"><div class="meta-label">Incident Window</div><div class="meta-value">Feb 24, 16:14–16:25 UTC</div></div>
+  <div class="meta-item"><div class="meta-label">Operation</div><div class="meta-value">AllocateDisks.POST</div></div>
+</div>
+
+<!-- Executive Summary -->
+<h2>1. Executive Summary</h2>
+<div class="card card-danger">
+  <p>Analysis of <strong>5,000</strong> <code>DiskAvailabilitySets.AllocateDisks.POST</code> operations reveals <strong>significant E2E latency issues</strong> compared to the baseline resource group. The top 20 slowest operations ranged from <strong>64 to 248 seconds</strong>, driven by three root causes:</p>
+  <div class="summary-grid" style="margin-top:16px;">
+    <div class="card card-danger" style="margin:0;">
+      <strong style="color:var(--danger);">SRP Async Provisioning</strong>
+      <p style="font-size:0.85rem;margin-top:4px;">PremiumV2_LRS storage accounts taking 32–235s to provision via async 202 polling</p>
+    </div>
+    <div class="card card-warning" style="margin:0;">
+      <strong style="color:#e67700;">SRP Lock Contention</strong>
+      <p style="font-size:0.85rem;margin-top:4px;">30s timeouts + 409 PendingOperation exclusive lock retries (18s each)</p>
+    </div>
+    <div class="card card-info" style="margin:0;">
+      <strong style="color:var(--primary);">ARM 429 Throttling</strong>
+      <p style="font-size:0.85rem;margin-top:4px;">SubscriptionRequestsThrottled with fixed 60s backoff on disk registration</p>
+    </div>
+  </div>
+</div>
+
+<!-- Baseline Comparison -->
+<h2>2. Baseline Comparison</h2>
+<div class="kpi-grid">
+  <div class="kpi kpi-bad"><div class="kpi-value">4×</div><div class="kpi-label">Avg E2E Worse</div></div>
+  <div class="kpi kpi-bad"><div class="kpi-value">32×</div><div class="kpi-label">P90 E2E Worse</div></div>
+  <div class="kpi kpi-bad"><div class="kpi-value">3.5×</div><div class="kpi-label">Max E2E Worse</div></div>
+  <div class="kpi kpi-warn"><div class="kpi-value">2.8×</div><div class="kpi-label">More ARM Failures</div></div>
+</div>
+<div class="card">
+<table>
+  <thead><tr><th>Metric</th><th class="td-right">TDPR-RG-2dlw1ml6 (Baseline)</th><th class="td-right">TDPR-RG-h1m94mbp (Impacted)</th><th class="td-right">Delta</th></tr></thead>
+  <tbody>
+    <tr><td>Operation Count</td><td class="td-right">8,438</td><td class="td-right">5,000</td><td class="td-right">—</td></tr>
+    <tr><td>E2E Avg</td><td class="td-right">2,642 ms</td><td class="td-right"><strong>10,490 ms</strong></td><td class="td-right delta-bad">4× worse</td></tr>
+    <tr><td>E2E P50</td><td class="td-right">1,043 ms</td><td class="td-right">1,577 ms</td><td class="td-right delta-bad">1.5×</td></tr>
+    <tr class="highlight-row"><td>E2E P90</td><td class="td-right">1,902 ms</td><td class="td-right"><strong>60,914 ms</strong></td><td class="td-right delta-bad">32× worse</td></tr>
+    <tr class="highlight-row"><td>E2E P95</td><td class="td-right">2,506 ms</td><td class="td-right"><strong>61,384 ms</strong></td><td class="td-right delta-bad">25× worse</td></tr>
+    <tr><td>E2E P99</td><td class="td-right">61,812 ms</td><td class="td-right">63,531 ms</td><td class="td-right">~similar</td></tr>
+    <tr><td>E2E Max</td><td class="td-right">70,078 ms</td><td class="td-right"><strong>248,406 ms</strong></td><td class="td-right delta-bad">3.5× worse</td></tr>
+    <tr><td>ARM CreateDisk Failures</td><td class="td-right">581</td><td class="td-right"><strong>1,645</strong></td><td class="td-right delta-bad">2.8× more</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- DiskManager Breakdown -->
+<h2>3. DiskManager Latency Breakdown</h2>
+<h3>3.1 AllocateDisks.POST Duration Summary (5,000 ops)</h3>
+<div class="card">
+<table>
+  <thead><tr><th>Metric</th><th class="td-right">Duration (ms)</th><th class="td-right">E2E Duration (ms)</th></tr></thead>
+  <tbody>
+    <tr><td>Avg</td><td class="td-right">7</td><td class="td-right">10,490</td></tr>
+    <tr><td>P50</td><td class="td-right">0</td><td class="td-right">1,577</td></tr>
+    <tr class="highlight-row"><td>P90</td><td class="td-right">15</td><td class="td-right"><strong>60,914</strong></td></tr>
+    <tr class="highlight-row"><td>P95</td><td class="td-right">15</td><td class="td-right"><strong>61,384</strong></td></tr>
+    <tr><td>P99</td><td class="td-right">31</td><td class="td-right">63,531</td></tr>
+    <tr><td>Max</td><td class="td-right">93</td><td class="td-right"><strong>248,406</strong></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.2 Top DiskRP Internal Block Durations</h3>
+<div class="card">
+<table>
+  <thead><tr><th>Block</th><th class="td-right">Avg (ms)</th><th class="td-right">P50</th><th class="td-right">P90</th><th class="td-right">P95</th><th class="td-right">P99</th><th class="td-right">Max</th></tr></thead>
+  <tbody>
+    <tr class="highlight-row"><td><strong>ArmRegistrationBlock.Build</strong></td><td class="td-right"><strong>8,448</strong></td><td class="td-right">349</td><td class="td-right"><strong>60,265</strong></td><td class="td-right"><strong>60,353</strong></td><td class="td-right"><strong>60,552</strong></td><td class="td-right">61,285</td></tr>
+    <tr class="highlight-row"><td><strong>StorageAccountAllocatorBlock.Build</strong></td><td class="td-right">1,645</td><td class="td-right">333</td><td class="td-right">3,362</td><td class="td-right">7,014</td><td class="td-right">77,172</td><td class="td-right"><strong>247,454</strong></td></tr>
+    <tr><td>HydratorBlock.Build</td><td class="td-right">479</td><td class="td-right">378</td><td class="td-right">854</td><td class="td-right">1,040</td><td class="td-right">1,445</td><td class="td-right">11,830</td></tr>
+    <tr><td>SourceResolverBlock.Build</td><td class="td-right">105</td><td class="td-right">30</td><td class="td-right">311</td><td class="td-right">360</td><td class="td-right">565</td><td class="td-right">4,509</td></tr>
+    <tr><td>WrapUpBlock.Build</td><td class="td-right">23</td><td class="td-right">18</td><td class="td-right">35</td><td class="td-right">40</td><td class="td-right">87</td><td class="td-right">664</td></tr>
+    <tr><td>OwnershipHandlerBlock.Build</td><td class="td-right">16</td><td class="td-right">13</td><td class="td-right">19</td><td class="td-right">25</td><td class="td-right">56</td><td class="td-right">479</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- PoolManager Breakdown -->
+<h2>4. PoolManager Latency Breakdown</h2>
+<h3>4.1 PoolManager Operations</h3>
+<div class="card">
+<table>
+  <thead><tr><th>PM Operation</th><th class="td-right">Count</th><th class="td-right">Avg E2E (ms)</th><th class="td-right">P50</th><th class="td-right">P90</th><th class="td-right">P95</th><th class="td-right">P99</th><th class="td-right">Max</th></tr></thead>
+  <tbody>
+    <tr class="highlight-row"><td>TryAllocateStorageAccountsAsync.POST</td><td class="td-right">5,455</td><td class="td-right"><strong>561</strong></td><td class="td-right">31</td><td class="td-right">546</td><td class="td-right">593</td><td class="td-right">3,015</td><td class="td-right"><strong>237,576</strong></td></tr>
+    <tr><td>CommitAllocateStorageAccountsSync.PUT</td><td class="td-right">10,066</td><td class="td-right">19</td><td class="td-right">15</td><td class="td-right">15</td><td class="td-right">15</td><td class="td-right">15</td><td class="td-right">19,734</td></tr>
+    <tr><td>PoolManagerOperations.Get.GET</td><td class="td-right">246</td><td class="td-right">1</td><td class="td-right">0</td><td class="td-right">0</td><td class="td-right">15</td><td class="td-right">15</td><td class="td-right">15</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>4.2 PoolManager Internal Components</h3>
+<div class="card">
+<table>
+  <thead><tr><th>Component</th><th>Operation</th><th class="td-right">Count</th><th class="td-right">Avg (ms)</th><th class="td-right">P99</th><th class="td-right">Max</th></tr></thead>
+  <tbody>
+    <tr><td>PoolManager_0</td><td>TryAllocateStorageAccountActionBase</td><td class="td-right">5,450</td><td class="td-right">194</td><td class="td-right">2,979</td><td class="td-right">7,042</td></tr>
+    <tr class="highlight-row"><td>PoolManager_0</td><td><strong>TryAllocateStorageAccountActionBaseAsync</strong></td><td class="td-right">32</td><td class="td-right"><strong>66,947</strong></td><td class="td-right"><strong>240,285</strong></td><td class="td-right"><strong>240,285</strong></td></tr>
+    <tr><td>PoolManager_1–4</td><td>CommitStorageAccountAction</td><td class="td-right">~10,000</td><td class="td-right">12–28</td><td class="td-right">33–49</td><td class="td-right">10,016</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- External Components -->
+<h2>5. External Component Latency</h2>
+<h3>5.1 ARM CreateDisk</h3>
+<div class="card card-danger">
+<div class="kpi-grid" style="margin-bottom:12px;">
+  <div class="kpi"><div class="kpi-value">16,645</div><div class="kpi-label">Total Calls</div></div>
+  <div class="kpi kpi-ok"><div class="kpi-value">15,000</div><div class="kpi-label">Successes (200)</div></div>
+  <div class="kpi kpi-bad"><div class="kpi-value">1,645</div><div class="kpi-label">Failures (429)</div></div>
+  <div class="kpi"><div class="kpi-value">216ms</div><div class="kpi-label">Avg Duration</div></div>
+</div>
+<div class="callout callout-danger">
+  <strong>Error:</strong> <code>SubscriptionRequestsThrottled</code> — "The request for subscription could not be processed due to an excessive volume of traffic. Please try again later."
+</div>
+</div>
+
+<h3>5.2 SRP CreateStorageAccount (via PoolManager)</h3>
+<div class="card card-warning">
+<table>
+  <thead><tr><th>SRP Response Pattern</th><th class="td-right">Duration</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td>Sync 200 (success)</td><td class="td-right">~500ms</td><td><span class="badge badge-green">OK</span></td></tr>
+    <tr class="highlight-row"><td>Async 202 → CreateStorageAccountAsync (polling)</td><td class="td-right"><strong>32–235 seconds</strong></td><td><span class="badge badge-red">Critical</span></td></tr>
+    <tr class="highlight-row"><td>409 Conflict — PendingOperation exclusive lock</td><td class="td-right">~18s per retry × 2–3</td><td><span class="badge badge-yellow">High</span></td></tr>
+    <tr><td>TaskCanceledException (30s timeout)</td><td class="td-right">30,000ms</td><td><span class="badge badge-yellow">High</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.3 Other External Components</h3>
+<div class="card">
+<table>
+  <thead><tr><th>Component</th><th>Operation</th><th class="td-right">Count</th><th class="td-right">Avg (ms)</th><th class="td-right">Max (ms)</th><th class="td-right">Failures</th></tr></thead>
+  <tbody>
+    <tr><td>DirectDriveGateway</td><td>PatchDisk</td><td class="td-right">19,323</td><td class="td-right">36</td><td class="td-right">5,202</td><td class="td-right">677</td></tr>
+    <tr><td>CRP</td><td>PostOperationCompletion</td><td class="td-right">5,000</td><td class="td-right">10</td><td class="td-right">123</td><td class="td-right">0</td></tr>
+    <tr><td>PIR</td><td>GetVMImage</td><td class="td-right">4,753</td><td class="td-right">37</td><td class="td-right">4,459</td><td class="td-right">0</td></tr>
+    <tr><td>AAD</td><td>MsalAcquireTokenAsync</td><td class="td-right">15,000</td><td class="td-right">0</td><td class="td-right">39</td><td class="td-right">0</td></tr>
+    <tr><td>EventGrid</td><td>PublishAsync</td><td class="td-right">5,000</td><td class="td-right">21</td><td class="td-right">663</td><td class="td-right">0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- Top 20 Deep Dive -->
+<h2>6. Top 20 Slowest Operations — Deep Dive</h2>
+
+<h3>6.1 Overview Table</h3>
+<div class="card">
+<div style="overflow-x:auto;">
+<table>
+  <thead><tr><th>#</th><th>DM OperationId</th><th class="td-right">E2E (s)</th><th>Primary Bottleneck</th><th class="td-right">Time (s)</th><th class="td-right">ARM 429s</th><th>SRP Issue</th><th>Pattern</th></tr></thead>
+  <tbody>
+    <tr class="highlight-row"><td>1</td><td class="mono">f5093a0f</td><td class="td-right"><strong>248</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">247</td><td class="td-right">0</td><td>Async 202 (235s)</td><td><span class="badge badge-red">A</span></td></tr>
+    <tr class="highlight-row"><td>2</td><td class="mono">6a3cc070</td><td class="td-right"><strong>242</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">240</td><td class="td-right">0</td><td>Async 202 (232s)</td><td><span class="badge badge-red">A</span></td></tr>
+    <tr class="highlight-row"><td>3</td><td class="mono">e26d0007</td><td class="td-right"><strong>241</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">240</td><td class="td-right">0</td><td>Async 202 (232s)</td><td><span class="badge badge-red">A</span></td></tr>
+    <tr class="highlight-row"><td>4</td><td class="mono">040b7671</td><td class="td-right"><strong>241</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">240</td><td class="td-right">0</td><td>Async 202 (232s)</td><td><span class="badge badge-red">A</span></td></tr>
+    <tr class="highlight-row"><td>5</td><td class="mono">f310aa39</td><td class="td-right"><strong>239</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">237</td><td class="td-right">0</td><td>Async 202 (233s)</td><td><span class="badge badge-red">A</span></td></tr>
+    <tr><td>6</td><td class="mono">59e8b136</td><td class="td-right"><strong>141</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">140</td><td class="td-right">0</td><td>409 PendingOp (129s)</td><td><span class="badge badge-yellow">B</span></td></tr>
+    <tr><td>7</td><td class="mono">7c4b5e77</td><td class="td-right"><strong>140</strong></td><td>StorageAccountAllocatorBlock</td><td class="td-right">139</td><td class="td-right">0</td><td>409 PendingOp (128s)</td><td><span class="badge badge-yellow">B</span></td></tr>
+    <tr><td>8</td><td class="mono">422d9cc2</td><td class="td-right">99</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">2</td><td>Async 202 (32s)</td><td><span class="badge badge-red">A</span>+<span class="badge badge-blue">C</span></td></tr>
+    <tr><td>9</td><td class="mono">f3902a39</td><td class="td-right">88</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">0</td><td>Async 202 (81s)</td><td><span class="badge badge-red">A</span></td></tr>
+    <tr><td>10</td><td class="mono">be6930be</td><td class="td-right">79</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">1</td><td>Sync slow (14s)</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>11</td><td class="mono">48233ab7</td><td class="td-right">78</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">0</td><td>409 PendingOp (70s)</td><td><span class="badge badge-yellow">B</span></td></tr>
+    <tr><td>12</td><td class="mono">276f6c2b</td><td class="td-right">73</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">2</td><td>PM fast</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>13</td><td class="mono">d69a4402</td><td class="td-right">70</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">0</td><td>409 PendingOp (65s)</td><td><span class="badge badge-yellow">B</span></td></tr>
+    <tr><td>14</td><td class="mono">d86c9626</td><td class="td-right">69</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">0</td><td>409 PendingOp (65s)</td><td><span class="badge badge-yellow">B</span></td></tr>
+    <tr><td>15</td><td class="mono">5b2fcb88</td><td class="td-right">67</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">3</td><td>Sync OK (3s)</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>16</td><td class="mono">df5a8f6c</td><td class="td-right">66</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">3</td><td>PM fast</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>17</td><td class="mono">97d5f967</td><td class="td-right">64</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">3</td><td>Sync OK (3s)</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>18</td><td class="mono">5949db35</td><td class="td-right">64</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">3</td><td>Sync OK (3s)</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>19</td><td class="mono">c91a9f7d</td><td class="td-right">64</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">2</td><td>PM fast</td><td><span class="badge badge-blue">C</span></td></tr>
+    <tr><td>20</td><td class="mono">8c4b3dd1</td><td class="td-right">64</td><td>ArmRegistrationBlock</td><td class="td-right">60</td><td class="td-right">3</td><td>Sync OK (3s)</td><td><span class="badge badge-blue">C</span></td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- Pattern A -->
+<h3>6.2 Pattern A — SRP Async Storage Account Provisioning</h3>
+<div class="card card-danger">
+<div class="pattern-header">
+  <div class="pattern-icon icon-red">A</div>
+  <div><strong>SRP Async PremiumV2_LRS Provisioning</strong><br><span style="color:var(--muted);font-size:0.85rem;">7 operations affected &nbsp;|&nbsp; Avg E2E: ~183s</span></div>
+</div>
+
+<div class="flow-diagram">DiskManager → StorageAccountAllocatorBlock
+  → PoolManager.TryAllocateStorageAccountsAsync.POST
+    → SRP CreateStorageAccount #1 → <span style="color:#198754">200 OK (~500ms)</span>
+    → SRP CreateStorageAccount #2 → <span style="color:#e67700">202 Accepted (Retry-After: 17)</span>
+      → CreateStorageAccountAsync polling → <span style="color:#dc3545">32–235 seconds ⏱️</span>
+  → DiskManager polls PM every 10s (GET returning 202)
+  → PM returns 200 → CommitAllocateStorageAccountsSync.PUT</div>
+
+<table>
+  <thead><tr><th>PM OperationId</th><th>→ DM OpId</th><th class="td-right">Acct #1</th><th class="td-right">Acct #2 (Async)</th><th class="td-right">Async Duration</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">cd661998</td><td class="mono">f5093a0f</td><td class="td-right"><span class="badge badge-green">200</span> 431ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>235s</strong></td></tr>
+    <tr><td class="mono">48942da8</td><td class="mono">f310aa39</td><td class="td-right"><span class="badge badge-green">200</span> 508ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>233s</strong></td></tr>
+    <tr><td class="mono">9f3d7bfb</td><td class="mono">040b7671</td><td class="td-right"><span class="badge badge-green">200</span> 573ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>232s</strong></td></tr>
+    <tr><td class="mono">8a8a5e41</td><td class="mono">6a3cc070</td><td class="td-right"><span class="badge badge-green">200</span> 545ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>232s</strong></td></tr>
+    <tr><td class="mono">7c6ece60</td><td class="mono">e26d0007</td><td class="td-right"><span class="badge badge-green">200</span> 568ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>232s</strong></td></tr>
+    <tr><td class="mono">c7a0eb5d</td><td class="mono">422d9cc2</td><td class="td-right"><span class="badge badge-green">200</span> 615ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>32s</strong></td></tr>
+    <tr><td class="mono">7d0a508f</td><td class="mono">f3902a39</td><td class="td-right"><span class="badge badge-green">200</span> 470ms</td><td class="td-right"><span class="badge badge-yellow">202</span></td><td class="td-right"><strong>81s</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="callout callout-danger" style="margin-top:12px;">
+  <strong>Root Cause:</strong> SRP was slow to provision PremiumV2_LRS storage accounts. The 2nd storage account was accepted asynchronously (HTTP 202) and took 32–235 seconds to complete. Ops 1–5 all started around 16:14:38 and completed around 16:18:34–37, suggesting the same SRP backend bottleneck.
+</div>
+</div>
+
+<!-- Pattern B -->
+<h3>6.3 Pattern B — SRP Exclusive Lock Contention</h3>
+<div class="card card-warning">
+<div class="pattern-header">
+  <div class="pattern-icon icon-yellow">B</div>
+  <div><strong>SRP 409 Conflict — Exclusive Lock Contention</strong><br><span style="color:var(--muted);font-size:0.85rem;">5 operations affected &nbsp;|&nbsp; Avg E2E: ~98s</span></div>
+</div>
+
+<div class="flow-diagram">DiskManager → StorageAccountAllocatorBlock
+  → PoolManager.TryAllocateStorageAccountsAsync.POST
+    → SRP CreateStorageAccount #1 → <span style="color:#198754">200 OK (~500ms)</span>
+    → SRP CreateStorageAccount #2 → <span style="color:#dc3545">TaskCanceledException (30s timeout)</span>
+      → Retry → <span style="color:#e67700">409 Conflict: "PendingOperation for Exclusive/{lockId}" (~18s)</span>
+      → Retry → <span style="color:#e67700">409 Conflict (~18s)</span>
+      → Retry → <span style="color:#198754">200 OK (~10s)</span></div>
+
+<table>
+  <thead><tr><th>DM OpId</th><th>Attempt 1</th><th>Attempt 2</th><th>Attempt 3</th><th>Attempt 4</th><th>Attempt 5</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="mono">7c4b5e77</td>
+      <td><span class="badge badge-green">200</span> 555ms</td>
+      <td><span class="badge badge-red">Timeout</span> 30s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-green">200</span> 10s</td>
+    </tr>
+    <tr>
+      <td class="mono">59e8b136</td>
+      <td><span class="badge badge-green">200</span> 591ms</td>
+      <td><span class="badge badge-red">Timeout</span> 30s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-green">200</span> 18s</td>
+    </tr>
+    <tr>
+      <td class="mono">48233ab7</td>
+      <td><span class="badge badge-green">200</span> 6.5s</td>
+      <td><span class="badge badge-red">Timeout</span> 30s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-green">200</span> 105ms</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="mono">d69a4402</td>
+      <td><span class="badge badge-green">200</span> 452ms</td>
+      <td><span class="badge badge-red">Timeout</span> 30s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-green">200</span> 94ms</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="mono">d86c9626</td>
+      <td><span class="badge badge-green">200</span> 586ms</td>
+      <td><span class="badge badge-red">Timeout</span> 30s</td>
+      <td><span class="badge badge-yellow">409</span> 18s</td>
+      <td><span class="badge badge-green">200</span> 105ms</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-warning" style="margin-top:12px;">
+  <strong>Root Cause:</strong> Concurrent SRP CreateStorageAccount requests are serialized on exclusive locks (<code>Exclusive/{lockId}</code>). The initial request times out after 30s, but SRP is still processing it. Retries receive <code>409 PendingOperation</code> until the lock is released.
+</div>
+</div>
+
+<!-- Pattern C -->
+<h3>6.4 Pattern C — ARM 429 Subscription Throttling</h3>
+<div class="card card-info">
+<div class="pattern-header">
+  <div class="pattern-icon icon-blue">C</div>
+  <div><strong>ARM 429 SubscriptionRequestsThrottled</strong><br><span style="color:var(--muted);font-size:0.85rem;">9 operations affected &nbsp;|&nbsp; Avg E2E: ~69s</span></div>
+</div>
+
+<div class="flow-diagram">DiskManager → ArmRegistrationBlock.Build
+  → ARM PUT CreateDisk (disk #1) → <span style="color:#dc3545">429 SubscriptionRequestsThrottled</span>
+  → ARM PUT CreateDisk (disk #2) → <span style="color:#dc3545">429 SubscriptionRequestsThrottled</span>
+  → ARM PUT CreateDisk (disk #3) → <span style="color:#dc3545">429 SubscriptionRequestsThrottled</span>
+  → <span style="color:#e67700">[Fixed 60-second backoff]</span>
+  → ARM PUT CreateDisk (disk #1) → <span style="color:#198754">200 OK (~150ms)</span>
+  → ARM PUT CreateDisk (disk #2) → <span style="color:#198754">200 OK (~150ms)</span>
+  → ARM PUT CreateDisk (disk #3) → <span style="color:#198754">200 OK (~150ms)</span></div>
+
+<table>
+  <thead><tr><th>DM OperationId</th><th class="td-right">ARM 429s</th><th>First 429</th><th>First Success</th><th class="td-right">Wait (s)</th><th class="td-right">Total ARM Span (s)</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">5949db35</td><td class="td-right">3</td><td>16:19:41.100</td><td>16:20:41.306</td><td class="td-right"><strong>60</strong></td><td class="td-right">60</td></tr>
+    <tr><td class="mono">5b2fcb88</td><td class="td-right">3</td><td>16:19:41.350</td><td>16:20:41.542</td><td class="td-right"><strong>60</strong></td><td class="td-right">60</td></tr>
+    <tr><td class="mono">97d5f967</td><td class="td-right">3</td><td>16:19:40.891</td><td>16:20:41.057</td><td class="td-right"><strong>61</strong></td><td class="td-right">61</td></tr>
+    <tr><td class="mono">8c4b3dd1</td><td class="td-right">3</td><td>16:19:41.353</td><td>16:20:41.532</td><td class="td-right"><strong>60</strong></td><td class="td-right">60</td></tr>
+    <tr><td class="mono">df5a8f6c</td><td class="td-right">3</td><td>16:24:49.694</td><td>16:25:49.836</td><td class="td-right"><strong>60</strong></td><td class="td-right">60</td></tr>
+    <tr><td class="mono">422d9cc2</td><td class="td-right">2</td><td>16:14:41.233</td><td>16:14:41.387</td><td class="td-right">0*</td><td class="td-right">60</td></tr>
+    <tr><td class="mono">276f6c2b</td><td class="td-right">2</td><td>16:14:41.591</td><td>16:14:41.900</td><td class="td-right">0*</td><td class="td-right">60</td></tr>
+    <tr><td class="mono">c91a9f7d</td><td class="td-right">2</td><td>16:14:41.515</td><td>16:14:41.788</td><td class="td-right">0*</td><td class="td-right">60</td></tr>
+    <tr><td class="mono">be6930be</td><td class="td-right">1</td><td>16:14:41.636</td><td>16:14:41.797</td><td class="td-right">0*</td><td class="td-right">60</td></tr>
+  </tbody>
+</table>
+<p style="font-size:0.8rem;color:var(--muted);margin-top:6px;">* Fast retry for initial 429s, but later disks in the batch triggered the 60s backoff (total ARM span = 60s)</p>
+
+<div class="callout callout-info" style="margin-top:12px;">
+  <strong>Root Cause:</strong> ARM returned <code>429 SubscriptionRequestsThrottled</code> for disk registration PUT calls. After receiving 429s, DiskManager applies a <strong>fixed 60-second backoff</strong>. Retries always succeed immediately (~150ms), confirming this is purely a rate-limiting issue from too many concurrent requests.
+</div>
+</div>
+
+<hr class="divider">
+
+<!-- Root Cause Summary -->
+<h2>7. Root Cause Summary</h2>
+<div class="card">
+<table>
+  <thead><tr><th>Root Cause</th><th class="td-right">Ops Affected</th><th class="td-right">Avg E2E</th><th>Component</th><th>Severity</th></tr></thead>
+  <tbody>
+    <tr class="highlight-row">
+      <td>SRP slow PremiumV2_LRS provisioning (async 202)</td>
+      <td class="td-right">7 of 20</td>
+      <td class="td-right">~183s</td>
+      <td><strong>SRP</strong></td>
+      <td><span class="badge badge-red">Critical</span></td>
+    </tr>
+    <tr>
+      <td>SRP exclusive lock contention (timeout + 409)</td>
+      <td class="td-right">5 of 20</td>
+      <td class="td-right">~98s</td>
+      <td><strong>SRP</strong></td>
+      <td><span class="badge badge-yellow">High</span></td>
+    </tr>
+    <tr>
+      <td>ARM 429 subscription throttling (60s backoff)</td>
+      <td class="td-right">9 of 20</td>
+      <td class="td-right">~69s</td>
+      <td><strong>ARM</strong></td>
+      <td><span class="badge badge-yellow">High</span></td>
+    </tr>
+  </tbody>
+</table>
+<div class="callout callout-danger" style="margin-top:16px;">
+  <strong>Contributing Factor:</strong> All 5,000 AllocateDisks operations occurred in a <strong>burst during 16:14–16:25 UTC</strong>, creating a thundering herd that overwhelmed both ARM's per-subscription rate limits and SRP's PremiumV2_LRS provisioning capacity in <code>eastus2euap</code>.
+</div>
+</div>
+
+<!-- Recommendations -->
+<h2>8. Recommendations</h2>
+
+<h3>Short-term</h3>
+<ul class="rec-list">
+  <li><strong>ARM Throttling — Backoff Strategy:</strong> Replace the fixed 60-second backoff after 429 with <strong>exponential backoff with jitter</strong> to reduce head-of-line blocking and spread retry load.</li>
+  <li><strong>ARM Rate Limits:</strong> Request a <strong>higher ARM rate limit</strong> for internal DiskRP-to-ARM calls (currently hitting SubscriptionRequestsThrottled).</li>
+  <li><strong>SRP Lock Contention:</strong> Engage SRP team to investigate why PremiumV2_LRS storage account creation holds <strong>exclusive locks for 18+ seconds</strong>, causing cascading 409 failures under concurrent load.</li>
+</ul>
+
+<h3>Medium-term</h3>
+<ul class="rec-list">
+  <li><strong>SRP Async Provisioning:</strong> Investigate with SRP team why PremiumV2_LRS accounts take <strong>3–4 minutes</strong> to provision asynchronously in eastus2euap. Compare with other regions and SKUs.</li>
+  <li><strong>Client-side Rate Limiting:</strong> Implement <strong>batching or rate limiting</strong> in DiskManager to avoid overwhelming ARM and SRP during large-scale VM deployments.</li>
+  <li><strong>Pre-provisioned Storage Accounts:</strong> Evaluate expanding the <strong>pre-provisioned storage account pool</strong> for PremiumV2_LRS to avoid on-demand SRP calls during allocation.</li>
+</ul>
+
+<h3>Long-term</h3>
+<ul class="rec-list">
+  <li><strong>Pipeline Parallelism:</strong> Review whether ArmRegistrationBlock and StorageAccountAllocatorBlock can run in <strong>parallel</strong> instead of sequentially to reduce E2E latency.</li>
+  <li><strong>Monitoring &amp; Alerting:</strong> Add alerts for SRP CreateStorageAccountAsync latency &gt; 30s and ARM 429 rates exceeding thresholds.</li>
+</ul>
+
+<!-- Appendix: Queries -->
+<h2>9. Appendix — Kusto Queries</h2>
+
+<h3>Query 1: DiskManager AllocateDisks Summary</h3>
+<div class="card">
+<pre class="kql"><span class="cmt">// DiskManager AllocateDisks duration summary</span>
+<span class="kw">DiskManagerApiQoSEvent</span>
+| <span class="kw">where</span> PreciseTimeStamp >= <span class="fn">ago</span>(5d)
+| <span class="kw">where</span> subscriptionId == <span class="str">"b883903d-216e-45b3-98b0-058819ec9224"</span>
+| <span class="kw">where</span> resourceGroupName =~ <span class="str">"TDPR-RG-h1m94mbp"</span>
+| <span class="kw">where</span> operationName == <span class="str">"DiskAvailabilitySets.AllocateDisks.POST"</span>
+| <span class="kw">summarize</span> <span class="fn">count</span>(), <span class="fn">avg</span>(e2EDurationInMilliseconds),
+    <span class="fn">percentile</span>(e2EDurationInMilliseconds, 50),
+    <span class="fn">percentile</span>(e2EDurationInMilliseconds, 90),
+    <span class="fn">percentile</span>(e2EDurationInMilliseconds, 99),
+    <span class="fn">max</span>(e2EDurationInMilliseconds)
+    <span class="kw">by</span> operationName</pre>
+</div>
+
+<h3>Query 2: Top 20 Slowest Operations</h3>
+<div class="card">
+<pre class="kql"><span class="kw">DiskManagerApiQoSEvent</span>
+| <span class="kw">where</span> PreciseTimeStamp >= <span class="fn">ago</span>(5d)
+| <span class="kw">where</span> subscriptionId == <span class="str">"b883903d-216e-45b3-98b0-058819ec9224"</span>
+| <span class="kw">where</span> resourceGroupName =~ <span class="str">"TDPR-RG-h1m94mbp"</span>
+| <span class="kw">where</span> operationName == <span class="str">"DiskAvailabilitySets.AllocateDisks.POST"</span>
+| <span class="kw">top</span> 20 <span class="kw">by</span> e2EDurationInMilliseconds <span class="kw">desc</span>
+| <span class="kw">project</span> operationId, e2EDurationInMilliseconds, PreciseTimeStamp</pre>
+</div>
+
+<h3>Query 3: Cross-Table Bottleneck Analysis</h3>
+<div class="card">
+<pre class="kql"><span class="cmt">// Map DM operationIds → ExternalComponentQoS for bottleneck analysis</span>
+<span class="kw">let</span> Top20Ops = <span class="kw">DiskManagerApiQoSEvent</span>
+| <span class="kw">where</span> PreciseTimeStamp >= <span class="fn">ago</span>(5d)
+| <span class="kw">where</span> subscriptionId == <span class="str">"b883903d-216e-45b3-98b0-058819ec9224"</span>
+| <span class="kw">where</span> resourceGroupName =~ <span class="str">"TDPR-RG-h1m94mbp"</span>
+| <span class="kw">where</span> operationName == <span class="str">"DiskAvailabilitySets.AllocateDisks.POST"</span>
+| <span class="kw">top</span> 20 <span class="kw">by</span> e2EDurationInMilliseconds <span class="kw">desc</span>
+| <span class="kw">project</span> operationId, e2EDurationInMilliseconds;
+<span class="kw">DiskRPExternalComponentQoSEvent</span>
+| <span class="kw">where</span> PreciseTimeStamp >= <span class="fn">ago</span>(5d)
+| <span class="kw">where</span> activityId <span class="kw">in</span> (Top20Ops)
+| <span class="kw">summarize</span> TotalDurationMs=<span class="fn">sum</span>(durationInMs),
+    MaxSingleCallMs=<span class="fn">max</span>(durationInMs), CallCount=<span class="fn">count</span>()
+    <span class="kw">by</span> activityId, componentName, operationName
+| <span class="kw">order by</span> activityId <span class="kw">asc</span>, TotalDurationMs <span class="kw">desc</span></pre>
+</div>
+
+<h3>Query 4: SRP Calls via PoolManager</h3>
+<div class="card">
+<pre class="kql"><span class="cmt">// Get PM TryAllocate ops, then check SRP calls</span>
+<span class="kw">let</span> PM_Ops = <span class="kw">PoolManagerApiQoSEvent</span>
+| <span class="kw">where</span> PreciseTimeStamp >= <span class="fn">ago</span>(5d)
+| <span class="kw">where</span> internalCorrelationId <span class="kw">in</span> (&lt;DM_OperationIds&gt;)
+| <span class="kw">where</span> operationName == <span class="str">"PoolManager.TryAllocateStorageAccountsAsync.POST"</span>
+| <span class="kw">project</span> DM_opId=internalCorrelationId, PM_opId=operationId;
+<span class="kw">DiskRPExternalComponentQoSEvent</span>
+| <span class="kw">where</span> PreciseTimeStamp >= <span class="fn">ago</span>(5d)
+| <span class="kw">where</span> activityId <span class="kw">in</span> (PM_Ops)
+| <span class="kw">where</span> componentName == <span class="str">"SRP"</span>
+| <span class="kw">project</span> PreciseTimeStamp, activityId, operationName,
+    durationInMs, resultCode, resultType</pre>
+</div>
+
+<div class="footer">
+  Report generated on February 25, 2026 &nbsp;|&nbsp; DiskRP Latency Analysis &nbsp;|&nbsp; eastus2euap
+</div>
+
+</div>
+</body>
+</html>

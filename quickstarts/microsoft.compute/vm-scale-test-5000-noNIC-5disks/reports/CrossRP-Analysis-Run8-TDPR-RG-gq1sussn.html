@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross-RP Analysis Report — Run 8 (TDPR-RG-gq1sussn)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;--yellow:#d29922;--blue:#58a6ff;--purple:#bc8cff;--orange:#f0883e;--cyan:#39d2c0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.6;padding:24px}
+.container{max-width:1500px;margin:0 auto}
+h1{font-size:26px;margin-bottom:8px;color:var(--blue)}
+h2{font-size:20px;margin:32px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);color:var(--blue)}
+h3{font-size:16px;margin:20px 0 10px;color:var(--purple)}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px}
+.grid{display:grid;gap:16px;margin-bottom:24px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-5{grid-template-columns:repeat(5,1fr)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+.metric-card{text-align:center}
+.metric-value{font-size:32px;font-weight:bold}
+.metric-label{color:var(--muted);font-size:12px;margin-top:4px}
+.success{color:var(--green)}.warning{color:var(--yellow)}.danger{color:var(--red)}.info{color:var(--blue)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:#1c2128;text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+td{padding:8px 12px;border-bottom:1px solid var(--border)}
+tr:hover{background:#1c2128}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
+.badge-green{background:rgba(63,185,80,.15);color:var(--green)}
+.badge-red{background:rgba(248,81,73,.15);color:var(--red)}
+.badge-yellow{background:rgba(210,153,34,.15);color:var(--yellow)}
+.badge-blue{background:rgba(88,166,255,.15);color:var(--blue)}
+.badge-purple{background:rgba(188,140,255,.15);color:var(--purple)}
+.flow-diagram{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.8;white-space:pre;overflow-x:auto}
+.section-note{background:rgba(88,166,255,.08);border-left:3px solid var(--blue);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.bottleneck{background:rgba(248,81,73,.08);border-left:3px solid var(--red);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.insight{background:rgba(63,185,80,.08);border-left:3px solid var(--green);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.chart-container{position:relative;height:320px}
+code{background:#21262d;padding:2px 6px;border-radius:4px;font-size:12px;font-family:'Cascadia Code','Fira Code',monospace}
+.appendix{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:20px;margin:12px 0}
+.appendix pre{background:#161b22;padding:16px;border-radius:6px;overflow-x:auto;font-size:12px;line-height:1.6;color:#c9d1d9;border:1px solid var(--border)}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px}
+.toc a{color:var(--blue);text-decoration:none;display:block;padding:4px 0;font-size:13px}
+.toc a:hover{text-decoration:underline}
+.pool-tier{border-left:4px solid var(--purple);background:rgba(188,140,255,.06);padding:16px 20px;margin:12px 0;border-radius:0 8px 8px 0}
+.pool-tier h4{color:var(--purple);margin-bottom:8px;font-size:15px}
+@media(max-width:900px){.grid-4,.grid-5{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Cross-RP Analysis Report &mdash; Run 8</h1>
+<p class="subtitle">
+Resource Group: <strong>TDPR-RG-gq1sussn</strong> &nbsp;|&nbsp; Region: <strong>EastUS2EUAP</strong> &nbsp;|&nbsp;
+Subscription: <code>b883903d-...058819ec9224</code> &nbsp;|&nbsp; Window: <strong>2026-02-25 23:38 &rarr; 00:04 UTC</strong><br>
+VM SKU: Standard_D2ds_v5 &nbsp;|&nbsp; OS Disk: StandardSSD_LRS &nbsp;|&nbsp; Data Disks: 4&times; PremiumV2_LRS &nbsp;|&nbsp; Approach: NoNIC (Inline NIC)<br>
+Data Sources: CRP <code>ApiQosEvent_nonGet</code>, DiskRP <code>DiskManagerApiQoSEvent</code> + <code>DiskRPExternalComponentQoSEvent</code>, SRP <code>RegionalSRP_ServiceApiQosEvent</code>
+</p>
+
+<!-- TOC -->
+<div class="toc">
+<strong style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px">Table of Contents</strong>
+<a href="#s1">1. Executive Summary</a>
+<a href="#s2">2. Call Flow &amp; Resource Provider Interactions</a>
+<a href="#s3">3. ARM Layer</a>
+<a href="#s4">4. CRP Layer — VM Operations</a>
+<a href="#s5">5. Three-Layer Pool Hit/Miss Analysis</a>
+<a href="#s5a">&nbsp;&nbsp;5.1 CRP Pool — Preprovisioned VM Reuse (Disk Preallocation)</a>
+<a href="#s5b">&nbsp;&nbsp;5.2 DiskRP Pool — Storage Account Allocation (PoolManager)</a>
+<a href="#s5c">&nbsp;&nbsp;5.3 SRP Pool — DNS Registration for Storage Accounts</a>
+<a href="#s6">6. DiskRP Layer — Disk Operations</a>
+<a href="#s7">7. SRP Layer — Storage Resource Provider</a>
+<a href="#s8">8. Timeline Correlation</a>
+<a href="#s9">9. Failure Analysis</a>
+<a href="#s10">10. Key Findings &amp; Recommendations</a>
+<a href="#s11">11. Appendix — Kusto Queries</a>
+</div>
+
+<!-- ===== SECTION 1: EXECUTIVE SUMMARY ===== -->
+<h2 id="s1">1. Executive Summary</h2>
+
+<div class="grid grid-5">
+<div class="card metric-card"><div class="metric-value info">4,994</div><div class="metric-label">VMs Created</div></div>
+<div class="card metric-card"><div class="metric-value success">15,040</div><div class="metric-label">Disks Created</div></div>
+<div class="card metric-card"><div class="metric-value warning">44.8%</div><div class="metric-label">CRP Success Rate</div></div>
+<div class="card metric-card"><div class="metric-value danger">3,567</div><div class="metric-label">CRP Failures</div></div>
+<div class="card metric-card"><div class="metric-value success">0</div><div class="metric-label">NIC 429 Errors</div></div>
+</div>
+
+<div class="section-note">
+<strong>Run 8 Context:</strong> This run attempted 5,000 VMs with <strong>4 PremiumV2_LRS data disks each</strong> (total target: 20,000 PremiumV2 disks).
+The <code>PremiumV2DiskCount</code> quota (20,000) was hit mid-run, causing 1,948 <code>OperationNotAllowed</code> errors and 1,510 <code>TooManyRequests</code> (429) errors at the CRP level.
+4,994 VMs were successfully created with varying numbers of data disks (not all got all 4 due to quota exhaustion).
+</div>
+
+<div class="grid grid-3">
+<div class="card">
+<h3>Pool Hit Rates Summary</h3>
+<table>
+<tr><th>Pool Level</th><th>Hit Rate</th><th>Impact</th></tr>
+<tr><td>CRP — VM Preprovisioning</td><td><span class="badge badge-yellow">33.2%</span></td><td>Hit: P50=644ms, Miss: P50=1,062ms</td></tr>
+<tr><td>DiskRP — Storage Account Pool</td><td><span class="badge badge-green">98.2%</span></td><td>Hit: P50=33ms, Miss: P50=20,032ms</td></tr>
+<tr><td>SRP — DNS Registration</td><td colspan="2"><span class="badge badge-blue">Embedded in DiskRP PoolManager async path</span></td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Duration by RP</h3>
+<table>
+<tr><th>Layer</th><th>P50</th><th>P90</th><th>P99</th></tr>
+<tr><td>CRP VM PUT</td><td>663ms</td><td>6,753ms</td><td>11,435ms</td></tr>
+<tr><td>DiskRP Disk Create</td><td>0ms</td><td>15ms</td><td>15ms</td></tr>
+<tr><td>DiskRP External→ARM</td><td>78ms</td><td>269ms</td><td>770ms</td></tr>
+<tr><td>DiskRP PoolManager Alloc</td><td>33ms</td><td>959ms</td><td>7,013ms</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Throughput</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Peak CRP VM PUTs/min</td><td>3,043</td></tr>
+<tr><td>Peak Disk Creates/min</td><td>5,695</td></tr>
+<tr><td>DiskRP External Ops</td><td>717,000+</td></tr>
+<tr><td>PoolManager Ops</td><td>18,868</td></tr>
+<tr><td>Total Duration</td><td>~26 min</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ===== SECTION 2: CALL FLOW ===== -->
+<h2 id="s2">2. Call Flow &amp; Resource Provider Interactions</h2>
+
+<div class="flow-diagram">
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  ARM Template Deployment (10 batches × 500 VMs)                             │
+│  └─── PUT Microsoft.Compute/virtualMachines (inline NIC, 4 data disks)      │
+│        │                                                                     │
+│        ├──► CRP (Compute RP)                                                │
+│        │    ├─── PreprovisionedVMReuse check ← POOL LEVEL 1 (CRP)          │
+│        │    │    ├─ HIT: "ReusingPreprovisionedVM" → 33.2% (1,645 ops)     │
+│        │    │    └─ MISS: "AzsmEscrowUnexpectedFailure" → 66.8% (3,306)    │
+│        │    ├─── NRP FastPath (inline NIC) → NrpFastPathEnabled=True        │
+│        │    └─── DiskRP calls (OS disk + 4 data disks = 5 per VM)           │
+│        │                                                                     │
+│        └──► DiskRP (Disk RP)                                                │
+│             ├─── StorageAccountAllocatorBlock ← POOL LEVEL 2 (DiskRP)       │
+│             │    ├─ Pool Hit (sync alloc): 13,818 ops (82.1%) — P50=0ms     │
+│             │    └─ Pool Miss (need new acct): 3,023 ops (17.9%)            │
+│             │         └─► PoolManager_0..4                                   │
+│             │              ├─ TryAllocate (sync/from pool): 3,024 — P50=33ms│
+│             │              └─ TryAllocateAsync (new acct): 54 — P50=20s     │
+│             │                   └─► ARM → SRP ← POOL LEVEL 3 (SRP/DNS)     │
+│             │                        └─ DNS registration for new storage    │
+│             │                           account (embedded in 20-34s async)  │
+│             ├─── DirectDriveGateway (PremiumV2 data disks)                  │
+│             │    ├─ PatchDisk: 24,064 ops — P50=24ms, 100% success          │
+│             │    ├─ GetDisk: 5,680 ops — 94.5% success                      │
+│             │    └─ DeleteDisk: 5,441 ops — 98.8% success                   │
+│             ├─── XStore (StandardSSD OS disk containers)                     │
+│             │    └─ GetContainerReference: 39,755 ops — 99.9% success       │
+│             └─── ARM (disk registration): 71,615 ops — 25.4% success        │
+│                  └─ Low success due to quota exhaustion retries              │
+└──────────────────────────────────────────────────────────────────────────────┘</div>
+
+<div class="section-note">
+<strong>Key Insight — NoNIC Approach:</strong> With inline NIC configuration (<code>networkInterfaceConfigurations</code>),
+CRP handles NIC creation internally via NRP FastPath (<code>NrpFastPathEnabled=True</code>). This results in
+<strong>zero ARM NIC PUT requests</strong> and <strong>zero NIC 429 errors</strong>, compared to 24K-50K in prior combined runs.
+</div>
+
+<!-- ===== SECTION 3: ARM LAYER ===== -->
+<h2 id="s3">3. ARM Layer</h2>
+
+<div class="section-note">
+ARM serves as the orchestration layer, receiving template deployments and routing to CRP. With the NoNIC approach,
+ARM only processes <code>Microsoft.Compute/virtualMachines</code> PUT requests (no separate NIC resources).
+The ARM layer itself is not a bottleneck — the 10-batch parallel deployment pattern works well.
+DiskRP also makes heavy ARM calls (71,615 <code>CreateDisk</code> operations) for disk resource registration.
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>ARM → CRP Routing</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Batches Submitted</td><td>10 (parallel)</td></tr>
+<tr><td>VMs per Batch</td><td>500</td></tr>
+<tr><td>Resources per VM</td><td>1 (VM only, inline NIC)</td></tr>
+<tr><td>Total ARM VM PUTs</td><td>6,465 (incl. retries)</td></tr>
+<tr><td>NIC ARM PUTs</td><td><span class="badge badge-green">0</span></td></tr>
+</table>
+</div>
+<div class="card">
+<h3>DiskRP → ARM (Disk Registration)</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total CreateDisk Calls</td><td>71,615</td></tr>
+<tr><td>Success Rate</td><td><span class="badge badge-red">25.4%</span></td></tr>
+<tr><td>P50 Duration</td><td>78ms</td></tr>
+<tr><td>P90 Duration</td><td>269ms</td></tr>
+<tr><td>Failure Cause</td><td>PremiumV2DiskCount quota (20K)</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ===== SECTION 4: CRP LAYER ===== -->
+<h2 id="s4">4. CRP Layer — VM Operations</h2>
+
+<div class="grid grid-4">
+<div class="card metric-card"><div class="metric-value info">6,465</div><div class="metric-label">Total VM PUT Requests</div></div>
+<div class="card metric-card"><div class="metric-value danger">44.8%</div><div class="metric-label">Success Rate</div></div>
+<div class="card metric-card"><div class="metric-value warning">663ms</div><div class="metric-label">P50 Latency</div></div>
+<div class="card metric-card"><div class="metric-value danger">6,753ms</div><div class="metric-label">P90 Latency</div></div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+<h3>CRP VM PUT — Per-Minute Timeline</h3>
+<table>
+<tr><th>Time (UTC)</th><th>Total</th><th>Success</th><th>Failures</th><th>Pool Hits</th><th>Pool Misses</th><th>Avg ms</th><th>P90 ms</th></tr>
+<tr><td>23:38</td><td>289</td><td><span class="success">289</span></td><td>0</td><td>289</td><td>0</td><td>594</td><td>740</td></tr>
+<tr><td>23:39</td><td>3,043</td><td>327</td><td><span class="danger">2,716</span></td><td>202</td><td>1,375</td><td>1,980</td><td>7,048</td></tr>
+<tr><td>23:40</td><td>1,634</td><td>857</td><td><span class="danger">777</span></td><td>521</td><td>1,066</td><td>1,819</td><td>6,701</td></tr>
+<tr><td>23:41</td><td>1,089</td><td><span class="success">1,037</span></td><td>52</td><td>500</td><td>589</td><td>1,661</td><td>5,734</td></tr>
+<tr><td>23:42</td><td>221</td><td>217</td><td>4</td><td>48</td><td>173</td><td>1,747</td><td>5,714</td></tr>
+<tr><td>23:43</td><td>121</td><td>110</td><td>11</td><td>85</td><td>35</td><td>1,482</td><td>872</td></tr>
+<tr><td>23:44</td><td>58</td><td>58</td><td>0</td><td>0</td><td>58</td><td>2,301</td><td>10,210</td></tr>
+<tr><td>23:45</td><td>8</td><td>2</td><td>6</td><td>0</td><td>8</td><td>739</td><td>829</td></tr>
+</table>
+</div>
+
+<div class="bottleneck">
+<strong>&#x26A0; CRP Failure Root Cause:</strong> The 44.8% success rate is driven by PremiumV2DiskCount quota exhaustion.
+<code>OperationNotAllowed</code> (1,948 errors) = disk quota exceeded. <code>TooManyRequests</code> (1,510 errors) = ARM throttling
+during retry storms. <code>FastPathMacTransferFailed</code> (94) = inline NIC MAC transfer issues. The CRP layer itself is healthy —
+failures are downstream quota constraints, not CRP bugs.
+</div>
+
+<!-- ===== SECTION 5: THREE-LAYER POOL ANALYSIS ===== -->
+<h2 id="s5">5. Three-Layer Pool Hit/Miss Analysis</h2>
+
+<div class="section-note">
+Azure VM provisioning involves <strong>three distinct pool/preallocation layers</strong>, each managed by a different resource provider.
+Understanding pool hit rates at each level is critical for scale test performance optimization.
+A "pool hit" means the RP reused a pre-allocated resource (fast path); a "pool miss" means it had to create from scratch (slow path).
+</div>
+
+<!-- Pool Level 1: CRP -->
+<div class="pool-tier" id="s5a">
+<h4>5.1 CRP Pool — Preprovisioned VM Reuse (Disk Preallocation)</h4>
+<p style="color:var(--muted);font-size:13px;margin-bottom:12px">
+CRP maintains a pool of preprovisioned VMs with pre-allocated OS disks. When a VM PUT arrives, CRP checks if a
+preprovisioned VM can be reused. Tracked via <code>labels.PreprovisionedVMReuse</code> in <code>ApiQosEvent_nonGet</code>.
+</p>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>CRP Pool Hit vs Miss</h3>
+<table>
+<tr><th>Status</th><th>Count</th><th>%</th><th>Avg ms</th><th>P50 ms</th><th>P90 ms</th><th>P99 ms</th></tr>
+<tr style="background:rgba(63,185,80,.05)"><td><span class="badge badge-green">Pool Hit</span> (ReusingPreprovisionedVM)</td><td>1,645</td><td>33.2%</td><td>771</td><td>644</td><td>872</td><td>5,857</td></tr>
+<tr style="background:rgba(248,81,73,.05)"><td><span class="badge badge-red">Pool Miss</span> (AzsmEscrowUnexpectedFailure)</td><td>3,306</td><td>66.8%</td><td>3,102</td><td>1,062</td><td>9,963</td><td>11,708</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>CRP Pool Impact Analysis</h3>
+<div class="chart-container" style="height:250px">
+<canvas id="crpPoolChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="insight">
+<strong>CRP Pool Insight:</strong> Pool hit rate is only 33.2% — the preprovisioned pool exhausted within the first minute at 5K burst.
+Pool hits are <strong>39% faster</strong> at P50 (644ms vs 1,062ms). At P90, the gap widens to <strong>10×</strong> (872ms vs 9,963ms).
+The pool exhaustion happens because CRP's preprovision rate cannot keep up with 3,000+ VM PUTs/min burst.
+</div>
+
+<!-- Pool Level 2: DiskRP -->
+<div class="pool-tier" id="s5b">
+<h4>5.2 DiskRP Pool — Storage Account Allocation (PoolManager)</h4>
+<p style="color:var(--muted);font-size:13px;margin-bottom:12px">
+DiskRP maintains a pool of pre-created storage accounts for managed disks. When a disk needs a storage account,
+<code>StorageAccountAllocatorBlock</code> first checks the pool. If available (sync allocation), the disk is placed on an existing account.
+If the pool is exhausted, <code>TryAllocateStorageAccountActionBaseAsync</code> triggers creation of a new storage account
+(which involves ARM → SRP → DNS registration). Tracked via <code>DiskRPExternalComponentQoSEvent</code> with <code>componentName=PoolManager_*</code>.
+</p>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>DiskRP StorageAccountAllocator — Hit/Miss</h3>
+<table>
+<tr><th>Path</th><th>Count</th><th>%</th><th>Avg ms</th><th>P50 ms</th><th>P90 ms</th><th>P99 ms</th></tr>
+<tr style="background:rgba(63,185,80,.05)"><td><span class="badge badge-green">Pool Hit</span> (sync alloc, &lt;100ms)</td><td>13,818</td><td>82.1%</td><td>2.8</td><td>0</td><td>0</td><td>—</td></tr>
+<tr style="background:rgba(248,81,73,.05)"><td><span class="badge badge-red">Pool Miss</span> (need new account, &ge;100ms)</td><td>3,023</td><td>17.9%</td><td>3,408</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+<p style="color:var(--muted);font-size:12px;margin-top:8px">Overall StorageAccountAllocator: 16,841 ops, Avg=614ms, P50=0ms, P90=1,009ms, P99=13,717ms</p>
+</div>
+<div class="card">
+<h3>DiskRP PoolManager — Detailed Operations</h3>
+<table>
+<tr><th>Operation</th><th>Count</th><th>Avg ms</th><th>P50</th><th>Hit Rate</th></tr>
+<tr><td>TryAllocate (sync — pool hit)</td><td>3,024</td><td>405</td><td>33ms</td><td><span class="badge badge-green">99.9%</span></td></tr>
+<tr><td>TryAllocateAsync (new acct — pool miss)</td><td>54</td><td>33,887</td><td>20,032ms</td><td><span class="badge badge-yellow">96.3%</span></td></tr>
+<tr><td>CommitStorageAccount (all managers)</td><td>10,406</td><td>15.7</td><td>12ms</td><td>100%</td></tr>
+<tr><td>DeleteStorageAccount (cleanup)</td><td>5,363</td><td>39.0</td><td>20ms</td><td>99.9%</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card" style="margin:16px 0">
+<h3>DiskRP Pool Allocation Timeline (per minute)</h3>
+<table>
+<tr><th>Time (UTC)</th><th>Sync Alloc (Hit)</th><th>Async Alloc (Miss)</th><th>Commits</th><th>Pool Hit Rate</th></tr>
+<tr><td>23:38</td><td>334</td><td>7</td><td>1,193</td><td><span class="badge badge-green">97.9%</span></td></tr>
+<tr><td>23:39</td><td>500</td><td>16</td><td>1,811</td><td><span class="badge badge-green">96.9%</span></td></tr>
+<tr><td>23:40</td><td>1,182</td><td>1</td><td>3,864</td><td><span class="badge badge-green">99.9%</span></td></tr>
+<tr><td>23:41</td><td>867</td><td>22</td><td>3,058</td><td><span class="badge badge-green">97.5%</span></td></tr>
+<tr><td>23:42</td><td>130</td><td>8</td><td>468</td><td><span class="badge badge-green">94.2%</span></td></tr>
+<tr><td>23:43–45</td><td>11</td><td>0</td><td>12</td><td><span class="badge badge-green">100%</span></td></tr>
+</table>
+</div>
+
+<div class="insight">
+<strong>DiskRP Pool Insight:</strong> The storage account pool performs well at <strong>98.2% overall hit rate</strong>.
+Only 54 async allocations (new account creation) were needed. However, when a pool miss occurs, the
+penalty is severe: <strong>33.9 seconds average</strong> (vs 405ms for pool hit — an <strong>84× slowdown</strong>).
+5 PoolManager instances (PoolManager_0 through PoolManager_4) distribute the load evenly.
+</div>
+
+<!-- Pool Level 3: SRP DNS -->
+<div class="pool-tier" id="s5c">
+<h4>5.3 SRP Pool — DNS Registration for Storage Accounts</h4>
+<p style="color:var(--muted);font-size:13px;margin-bottom:12px">
+When DiskRP's PoolManager creates a <strong>new</strong> storage account (pool miss), the flow is:
+<code>PoolManager → ARM PUT storageAccounts → SRP → DNS Registration</code>.
+SRP registers the DNS name for the new storage account (e.g., <code>*.blob.core.windows.net</code>).
+This DNS registration time is <strong>embedded within the PoolManager TryAllocateAsync duration</strong> (avg 33.9s).
+</p>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>SRP DNS Impact (embedded in PoolManager Async)</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>New Storage Accounts Created</td><td>54 (TryAllocateAsync operations)</td></tr>
+<tr><td>Avg Creation Time (incl DNS)</td><td><span class="badge badge-yellow">33,887 ms (33.9s)</span></td></tr>
+<tr><td>P50 Creation Time</td><td>20,032 ms (20s)</td></tr>
+<tr><td>P90 Creation Time</td><td>70,088 ms (70s)</td></tr>
+<tr><td>P99 Creation Time</td><td>80,000 ms (80s)</td></tr>
+<tr><td>Success Rate</td><td>96.3% (52/54 succeeded)</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Why SRP Telemetry Is Not Directly Queryable</h3>
+<div class="section-note" style="margin:0">
+<strong>SRP Direct Query Result: 0 rows</strong> across all SRP tables for this subscription.
+<br><br>
+<strong>Reason:</strong> Managed disk storage accounts are created in <strong>Microsoft's internal platform subscription</strong>,
+not in the user's subscription (<code>b883903d-...</code>). SRP telemetry (<code>RegionalSRP_ServiceApiQosEvent</code>)
+is keyed by the storage account's owning subscription ID, which is a Microsoft-managed subscription.
+<br><br>
+<strong>How to observe SRP:</strong> The SRP DNS registration latency is captured within DiskRP's
+<code>TryAllocateStorageAccountActionBaseAsync</code> duration. The 20-80 second duration includes:
+ARM PUT for storage account → SRP processing → DNS zone registration → DNS propagation.
+<br><br>
+<strong>For PremiumV2_LRS data disks:</strong> These use <strong>DirectDriveGateway</strong> (not traditional XStore/SRP).
+SRP DNS is only involved for the StandardSSD_LRS OS disk storage accounts.
+</div>
+</div>
+</div>
+
+<div class="card" style="margin:16px 0">
+<h3>Cross-Pool Comparison</h3>
+<div class="chart-container" style="height:300px">
+<canvas id="poolComparisonChart"></canvas>
+</div>
+</div>
+
+<!-- ===== SECTION 6: DiskRP LAYER ===== -->
+<h2 id="s6">6. DiskRP Layer — Disk Operations</h2>
+
+<div class="grid grid-4">
+<div class="card metric-card"><div class="metric-value info">15,040</div><div class="metric-label">Disks Created (Callback PUT)</div></div>
+<div class="card metric-card"><div class="metric-value success">100%</div><div class="metric-label">Disk Callback Success</div></div>
+<div class="card metric-card"><div class="metric-value warning">61.4%</div><div class="metric-label">AllocateDisks Success</div></div>
+<div class="card metric-card"><div class="metric-value info">717K+</div><div class="metric-label">External Component Ops</div></div>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>DiskRP API Operations</h3>
+<table>
+<tr><th>Operation</th><th>Count</th><th>Success%</th><th>P50 ms</th><th>P90 ms</th><th>P99 ms</th></tr>
+<tr><td>Disks.GET</td><td>58,268</td><td>81.1%</td><td>0</td><td>0</td><td>15</td></tr>
+<tr><td>Disks.PUT (Callback)</td><td>15,040</td><td><span class="success">100%</span></td><td>0</td><td>15</td><td>15</td></tr>
+<tr><td>DiskAvailSets.ValidateAndProtect</td><td>6,530</td><td><span class="success">100%</span></td><td>0</td><td>15</td><td>46</td></tr>
+<tr><td>DiskAvailSets.AllocateDisks</td><td>5,149</td><td><span class="warning">61.4%</span></td><td>15</td><td>234</td><td>921</td></tr>
+<tr><td>AsyncOperationCompletion</td><td>3,160</td><td>97.2%</td><td>0</td><td>0</td><td>15</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>DiskRP External Components (non-Pool, &gt;50 ops)</h3>
+<table>
+<tr><th>Component</th><th>Operation</th><th>Count</th><th>Success%</th><th>P50ms</th></tr>
+<tr><td>ARM</td><td>CreateDisk</td><td>71,615</td><td>25.4%</td><td>78</td></tr>
+<tr><td>XStore</td><td>GetContainerRef</td><td>39,755</td><td>99.9%</td><td>0</td></tr>
+<tr><td>DirectDrive</td><td>PatchDisk</td><td>24,064</td><td>100%</td><td>24</td></tr>
+<tr><td>XStoreBlob</td><td>FetchInternalProps</td><td>16,654</td><td>96.3%</td><td>14</td></tr>
+<tr><td>PIR</td><td>ResolveManagedVMImage</td><td>2,754</td><td>100%</td><td>6</td></tr>
+<tr><td>CRP</td><td>PostOperationCompletion</td><td>9,034</td><td>98.6%</td><td>7</td></tr>
+<tr><td>EventGrid</td><td>Post</td><td>730</td><td>100%</td><td>—</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card" style="margin:16px 0">
+<h3>DiskRP Pipeline Blocks — Internal Processing</h3>
+<table>
+<tr><th>Pipeline Block</th><th>Count</th><th>Success%</th><th>Avg ms</th><th>P50 ms</th><th>P99 ms</th></tr>
+<tr><td>PipelineSetupBlock</td><td>20,305</td><td>100%</td><td>3.4</td><td>2</td><td>55</td></tr>
+<tr><td>ArmRegistrationBlock</td><td>17,026</td><td>100%</td><td>17,908</td><td>101</td><td>183,758</td></tr>
+<tr><td>ReassignPreprovisionedBlock</td><td>16,847</td><td>100%</td><td>50.3</td><td>0</td><td>548</td></tr>
+<tr><td>StorageAccountAllocatorBlock</td><td>16,841</td><td>100%</td><td>614</td><td>0</td><td>13,717</td></tr>
+<tr><td>EntityCreatorBlock</td><td>16,835</td><td>100%</td><td>74.7</td><td>52</td><td>380</td></tr>
+<tr><td>HydratorBlock</td><td>16,701</td><td>100%</td><td>143</td><td>93</td><td>593</td></tr>
+<tr><td>DiskDeletionBlock</td><td>18,848</td><td>94.2%</td><td>371</td><td>107</td><td>2,104</td></tr>
+<tr><td>SourceResolverBlock</td><td>16,706</td><td>100%</td><td>0.8</td><td>0</td><td>16</td></tr>
+</table>
+</div>
+
+<div class="bottleneck">
+<strong>&#x26A0; DiskRP Bottleneck — ArmRegistrationBlock:</strong> Average 17.9 seconds, P99 at <strong>183 seconds (3+ minutes)</strong>.
+This block registers the created disk resource back with ARM. The extreme tail latency is caused by ARM throttling
+during the burst — 71,615 CreateDisk calls competing for ARM registration slots.
+</div>
+
+<!-- ===== SECTION 7: SRP LAYER ===== -->
+<h2 id="s7">7. SRP Layer — Storage Resource Provider</h2>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>SRP Involvement in Run 8</h3>
+<table>
+<tr><th>Aspect</th><th>Details</th></tr>
+<tr><td>OS Disks (StandardSSD_LRS)</td><td>Use traditional XStore → SRP-managed storage accounts</td></tr>
+<tr><td>Data Disks (PremiumV2_LRS)</td><td>Use DirectDriveGateway — <strong>no SRP DNS involvement</strong></td></tr>
+<tr><td>Direct SRP Telemetry</td><td><span class="badge badge-yellow">0 rows</span> (managed disk SA in platform subscription)</td></tr>
+<tr><td>SRP via DiskRP PoolManager</td><td>54 new storage account creations (includes SRP/DNS time)</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>SRP Data Path Explanation</h3>
+<div class="section-note" style="margin:0">
+<strong>Why SRP has zero direct rows:</strong>
+<ol style="margin:8px 0 0 20px;font-size:13px">
+<li><strong>PremiumV2_LRS</strong> data disks use <strong>DirectDriveGateway</strong>, which bypasses traditional SRP/XStore entirely.</li>
+<li><strong>StandardSSD_LRS</strong> OS disks use XStore storage accounts, but these accounts are created in
+<strong>Microsoft's internal managed-disk subscription</strong> — not in the user subscription (<code>b883903d-...</code>).</li>
+<li>SRP telemetry (<code>RegionalSRP_ServiceApiQosEvent</code>) is keyed by the owning subscription of the storage account,
+which is Microsoft-managed and not queryable with user subscription filters.</li>
+</ol>
+<br>
+<strong>Observable SRP impact:</strong> The DiskRP <code>TryAllocateStorageAccountActionBaseAsync</code> duration (avg 33.9s)
+includes the full ARM→SRP→DNS registration pipeline for new storage accounts.
+</div>
+</div>
+</div>
+
+<div class="card" style="margin:16px 0">
+<h3>Disk Storage Technology Breakdown</h3>
+<table>
+<tr><th>Disk Type</th><th>SKU</th><th>Storage Backend</th><th>SRP Involved?</th><th>Count per VM</th><th>Component in DiskRP</th></tr>
+<tr><td>OS Disk</td><td>StandardSSD_LRS</td><td>XStore (traditional)</td><td>Yes (via platform sub)</td><td>1</td><td>XStore, XStoreBlob</td></tr>
+<tr><td>Data Disk 1-4</td><td>PremiumV2_LRS</td><td>DirectDrive</td><td><span class="badge badge-green">No</span></td><td>4</td><td>DirectDriveGateway</td></tr>
+</table>
+</div>
+
+<!-- ===== SECTION 8: TIMELINE CORRELATION ===== -->
+<h2 id="s8">8. Timeline Correlation</h2>
+
+<div class="card" style="margin-bottom:16px">
+<h3>Cross-RP Operations Per Minute</h3>
+<div class="chart-container">
+<canvas id="timelineChart"></canvas>
+</div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+<h3>Disk Creation Throughput (DiskRP Callback PUT)</h3>
+<table>
+<tr><th>Time (UTC)</th><th>Disks Created</th><th>Avg ms</th><th>P90 ms</th><th>Notes</th></tr>
+<tr><td>23:38</td><td>3,948</td><td>2</td><td>15</td><td>Initial burst</td></tr>
+<tr><td>23:39</td><td><span class="success">5,695</span></td><td>2</td><td>15</td><td>Peak throughput</td></tr>
+<tr><td>23:40</td><td>4,259</td><td>2</td><td>0</td><td>Sustained high throughput</td></tr>
+<tr><td>23:41</td><td>1,002</td><td>2</td><td>11</td><td>Quota exhaustion begins</td></tr>
+<tr><td>23:42</td><td>131</td><td>1</td><td>0</td><td>Tail operations</td></tr>
+<tr><td>23:44</td><td>5</td><td>3</td><td>15</td><td>Final stragglers</td></tr>
+</table>
+</div>
+
+<!-- ===== SECTION 9: FAILURE ANALYSIS ===== -->
+<h2 id="s9">9. Failure Analysis</h2>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>CRP Failure Breakdown</h3>
+<table>
+<tr><th>Error Code</th><th>Count</th><th>%</th><th>Category</th></tr>
+<tr><td><code>OperationNotAllowed</code></td><td>1,948</td><td>54.6%</td><td><span class="badge badge-red">Client</span></td></tr>
+<tr><td><code>TooManyRequests</code></td><td>1,510</td><td>42.3%</td><td><span class="badge badge-red">Client</span></td></tr>
+<tr><td><code>FastPathMacTransferFailed</code></td><td>94</td><td>2.6%</td><td><span class="badge badge-red">Client</span></td></tr>
+<tr><td><code>OverconstrainedZonalAllocationRequest</code></td><td>14</td><td>0.4%</td><td><span class="badge badge-red">Client</span></td></tr>
+<tr><td><code>OSProvisioningTimedOut</code></td><td>1</td><td>0.03%</td><td><span class="badge badge-red">Client</span></td></tr>
+<tr><td colspan="4" style="padding-top:12px"><strong>Total Failures: 3,567</strong> — Server Errors: <span class="badge badge-green">1</span></td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Failure Root Causes</h3>
+<div class="bottleneck" style="margin-bottom:12px">
+<strong>OperationNotAllowed (54.6%):</strong> PremiumV2DiskCount quota exceeded (20,000 limit).
+With 4 data disks per VM, 5,000 VMs need 20,000 PremiumV2 disks.
+Early VMs consumed the quota, leaving later VMs unable to create all disks.
+</div>
+<div class="bottleneck" style="margin-bottom:12px">
+<strong>TooManyRequests (42.3%):</strong> ARM rate limiting triggered by retry storms
+after quota failures. CRP retries disk creation → ARM throttles → 429 cascade.
+</div>
+<div class="section-note">
+<strong>FastPathMacTransferFailed (2.6%):</strong> NRP FastPath inline NIC MAC address
+transfer failures — expected at low rates during high-concurrency bursts.
+Typically auto-retried successfully.
+</div>
+</div>
+</div>
+
+<div class="card" style="margin:16px 0">
+<h3>DiskRP Failure Details</h3>
+<table>
+<tr><th>Operation</th><th>Total</th><th>Success</th><th>Client Errors</th><th>Success Rate</th><th>Root Cause</th></tr>
+<tr><td>AllocateDisks.POST</td><td>5,149</td><td>3,160</td><td>1,989</td><td><span class="warning">61.4%</span></td><td>PremiumV2DiskCount quota</td></tr>
+<tr><td>Disks.GET</td><td>58,268</td><td>47,282</td><td>10,986</td><td>81.1%</td><td>404 for non-existent disks during retries</td></tr>
+<tr><td>ARM CreateDisk</td><td>71,615</td><td>18,166</td><td>53,449</td><td><span class="danger">25.4%</span></td><td>Quota + throttling retries</td></tr>
+</table>
+</div>
+
+<!-- ===== SECTION 10: FINDINGS ===== -->
+<h2 id="s10">10. Key Findings &amp; Recommendations</h2>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>&#x2705; What Worked Well</h3>
+<ul style="margin:8px 0 0 20px;font-size:13px">
+<li><strong>NoNIC approach:</strong> Zero NIC 429 errors (vs 24K-50K in prior runs)</li>
+<li><strong>DiskRP Storage Account Pool:</strong> 98.2% hit rate, excellent pool management</li>
+<li><strong>Disk creation latency:</strong> P50=0ms, P90=15ms — near-instant when quota allows</li>
+<li><strong>DirectDriveGateway:</strong> 100% success on PatchDisk (24K ops), no SRP dependency</li>
+<li><strong>PoolManager load distribution:</strong> 5 managers handling load evenly</li>
+<li><strong>Inline NIC throughput:</strong> NRP FastPath enabled on all VMs</li>
+</ul>
+</div>
+<div class="card">
+<h3>&#x26A0; Issues &amp; Bottlenecks</h3>
+<ul style="margin:8px 0 0 20px;font-size:13px">
+<li><strong>PremiumV2DiskCount quota (20K):</strong> Hard limit — 5K VMs × 4 disks = exactly at limit, race condition causes partial failures</li>
+<li><strong>CRP pool exhaustion:</strong> Only 33.2% hit rate at 5K burst — pool refill can't keep up</li>
+<li><strong>ArmRegistrationBlock P99=183s:</strong> ARM throttling creates extreme tail latency in disk registration</li>
+<li><strong>Retry amplification:</strong> 6,465 CRP PUTs for 5,000 target VMs (29% retry overhead)</li>
+<li><strong>New storage account creation:</strong> 33.9s avg when pool miss occurs (SRP DNS is in this path)</li>
+</ul>
+</div>
+</div>
+
+<div class="card" style="margin:16px 0">
+<h3>Recommendations for Next Run</h3>
+<table>
+<tr><th>#</th><th>Recommendation</th><th>Expected Impact</th></tr>
+<tr><td>1</td><td>Reduce data disks to 3 per VM (15K total, well within 20K quota)</td><td>Eliminate OperationNotAllowed errors</td></tr>
+<tr><td>2</td><td>Request PremiumV2DiskCount quota increase to 30K+</td><td>Allow 5+ disks per VM without hitting limits</td></tr>
+<tr><td>3</td><td>Stagger batch launches by 30s instead of simultaneous</td><td>Improve CRP pool hit rate from 33% → ~60%+</td></tr>
+<tr><td>4</td><td>Monitor PoolManager async allocation rate during burst</td><td>Understand SRP/DNS bottleneck contribution</td></tr>
+<tr><td>5</td><td>Consider StandardSSD_LRS for data disks if DirectDrive not needed</td><td>Different pool/quota behavior, no PremiumV2 limit</td></tr>
+</table>
+</div>
+
+<!-- ===== SECTION 11: APPENDIX ===== -->
+<h2 id="s11">11. Appendix — Kusto Queries</h2>
+
+<div class="appendix">
+<h3>Q1: CRP VM Operations Summary</h3>
+<pre>// Cluster: azcrp.kusto.windows.net / crp_allprod
+ApiQosEvent_nonGet
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| summarize 
+    Count = count(),
+    AvgMs = round(avg(durationInMilliseconds), 1),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99),
+    SuccessRate = round(100.0 * countif(resultType == 0) / count(), 1),
+    ClientErrors = countif(resultType == 1),
+    ServerErrors = countif(resultType == 2)
+    by operationName
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q2: CRP Pool Hit/Miss (PreprovisionedVMReuse)</h3>
+<pre>// Cluster: azcrp.kusto.windows.net / crp_allprod
+ApiQosEvent_nonGet
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| where operationName startswith "VirtualMachines"
+| extend PoolStatus = tostring(parse_json(labels).PreprovisionedVMReuse)
+| where isnotempty(PoolStatus)
+| summarize 
+    Count = count(),
+    AvgMs = round(avg(durationInMilliseconds), 1),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99)
+    by PoolStatus
+| extend HitType = case(
+    PoolStatus == "ReusingPreprovisionedVM", "Pool Hit (CRP Disk Reuse)",
+    PoolStatus == "AzsmEscrowUnexpectedFailure", "Pool Miss (New Allocation)",
+    strcat("Other: ", PoolStatus))
+| project HitType, Count, AvgMs, P50, P90, P99</pre>
+</div>
+
+<div class="appendix">
+<h3>Q3: CRP VM PUT Timeline with Pool Status</h3>
+<pre>// Cluster: azcrp.kusto.windows.net / crp_allprod
+ApiQosEvent_nonGet
+| where PreciseTimeStamp between(datetime(2026-02-25 23:36:00) .. datetime(2026-02-26 00:06:00))
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| where operationName == "VirtualMachines.ResourceOperation.PUT"
+| summarize 
+    Total = count(),
+    Success = countif(resultType == 0),
+    Failures = countif(resultType != 0),
+    PoolHits = countif(tostring(parse_json(labels).PreprovisionedVMReuse) == "ReusingPreprovisionedVM"),
+    PoolMisses = countif(tostring(parse_json(labels).PreprovisionedVMReuse) == "AzsmEscrowUnexpectedFailure"),
+    AvgMs = round(avg(durationInMilliseconds), 0),
+    P90 = percentile(durationInMilliseconds, 90)
+    by bin(PreciseTimeStamp, 1m)
+| order by PreciseTimeStamp asc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q4: CRP Failure Breakdown</h3>
+<pre>// Cluster: azcrp.kusto.windows.net / crp_allprod
+ApiQosEvent_nonGet
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| where operationName == "VirtualMachines.ResourceOperation.PUT"
+| where resultType != 0
+| summarize Count = count() by resultCode, exceptionType
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q5: DiskRP API Operations Summary</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+DiskManagerApiQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| summarize 
+    Count = count(),
+    AvgMs = round(avg(durationInMilliseconds), 1),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99),
+    SuccessRate = round(100.0 * countif(resultType == 0) / count(), 1),
+    ClientErrors = countif(resultType == 1),
+    ServerErrors = countif(resultType == 2)
+    by operationName
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q6: DiskRP PoolManager — Storage Account Pool Hit/Miss</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+DiskRPExternalComponentQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where subscriptionId =~ "b883903d-216e-45b3-98b0-058819ec9224"
+| where componentName startswith "PoolManager"
+| summarize 
+    Count = count(),
+    AvgMs = round(avg(durationInMs), 1),
+    P50 = percentile(durationInMs, 50),
+    P90 = percentile(durationInMs, 90),
+    P99 = percentile(durationInMs, 99),
+    SuccessRate = round(100.0 * countif(operationResult == "Success") / count(), 1),
+    Failures = countif(operationResult != "Success")
+    by operationName, componentName
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q7: DiskRP StorageAccountAllocatorBlock — Pool Hit/Miss by Latency</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+// Pool Hit = sync allocation (&#60;100ms), Pool Miss = needs new storage account (&#62;=100ms)
+DiskRPExternalComponentQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where subscriptionId =~ "b883903d-216e-45b3-98b0-058819ec9224"
+| where operationName == "StorageAccountAllocatorBlock.Build"
+| summarize 
+    Total = count(),
+    PoolHit = countif(durationInMs &#60; 100),
+    PoolMiss = countif(durationInMs >= 100),
+    AvgMs = round(avg(durationInMs), 1),
+    PoolHitAvgMs = round(avg(iif(durationInMs &#60; 100, todouble(durationInMs), real(null))), 1),
+    PoolMissAvgMs = round(avg(iif(durationInMs >= 100, todouble(durationInMs), real(null))), 1),
+    P50 = percentile(durationInMs, 50),
+    P90 = percentile(durationInMs, 90),
+    P99 = percentile(durationInMs, 99)</pre>
+</div>
+
+<div class="appendix">
+<h3>Q8: DiskRP PoolManager Allocation Timeline</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+DiskRPExternalComponentQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:36:00) .. datetime(2026-02-26 00:06:00))
+| where subscriptionId =~ "b883903d-216e-45b3-98b0-058819ec9224"
+| where componentName startswith "PoolManager"
+| where operationName in ("TryAllocateStorageAccountActionBase", "TryAllocateStorageAccountActionBaseAsync", "CommitStorageAccountAction")
+| summarize 
+    TryAllocSync = countif(operationName == "TryAllocateStorageAccountActionBase"),
+    TryAllocAsync = countif(operationName == "TryAllocateStorageAccountActionBaseAsync"),
+    Commits = countif(operationName == "CommitStorageAccountAction"),
+    PoolHitRate = round(100.0 * countif(operationName == "TryAllocateStorageAccountActionBase") 
+        / (countif(operationName == "TryAllocateStorageAccountActionBase") 
+        + countif(operationName == "TryAllocateStorageAccountActionBaseAsync")), 1)
+    by bin(PreciseTimeStamp, 1m)
+| order by PreciseTimeStamp asc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q9: DiskRP External Components — All Non-Internal</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+DiskRPExternalComponentQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where subscriptionId =~ "b883903d-216e-45b3-98b0-058819ec9224"
+| where componentName !in ("DiskRP", "AAD")
+| summarize 
+    Count = count(),
+    AvgMs = round(avg(durationInMs), 1),
+    P50 = percentile(durationInMs, 50),
+    P90 = percentile(durationInMs, 90),
+    P99 = percentile(durationInMs, 99),
+    SuccessRate = round(100.0 * countif(operationResult == "Success") / count(), 1)
+    by operationName, componentName
+| where Count > 50
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q10: SRP Direct Query (returns 0 rows — see Section 7 for explanation)</h3>
+<pre>// Cluster: xcontrolplane.kusto.windows.net / SRP
+// NOTE: Returns 0 rows because managed disk storage accounts are in Microsoft's
+// platform subscription, not user subscription. SRP telemetry is keyed by
+// storage account owning subscription.
+RegionalSRP_ServiceApiQosEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:30:00) .. datetime(2026-02-26 00:30:00))
+| where subscriptionId =~ "b883903d-216e-45b3-98b0-058819ec9224"
+| summarize 
+    Count = count(),
+    AvgMs = round(avg(durationInMilliseconds), 1),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99),
+    SuccessRate = round(100.0 * countif(httpStatusCode >= 200 and httpStatusCode &#60; 300) / count(), 1)
+    by operationName
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q11: Success Rate SLA Trend (adapted from TDPR Concurrency pattern)</h3>
+<pre>// Cluster: azcrp.kusto.windows.net / crp_allprod
+// Adapted from TDPR Concurrency SLA tracking pattern for single-run analysis
+let StartTime = datetime(2026-02-25 23:35:00);
+let EndTime = datetime(2026-02-26 00:10:00);
+let Data = ApiQosEvent_nonGet
+| where PreciseTimeStamp between(StartTime .. EndTime)
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| where operationName == "VirtualMachines.ResourceOperation.PUT";
+let FailureDetails = Data
+| where resultType != 0
+| extend FailureCategory = case(resultType == 1, "Client", resultType == 2, "Server", "Other")
+| summarize ErrorCount = count() by bin(PreciseTimeStamp, 1m), FailureCategory, resultCode, exceptionType
+| extend ErrorEntry = strcat("[", FailureCategory, "] ", resultCode, ": ", ErrorCount)
+| summarize FailureSummary = make_list(ErrorEntry) by bin(PreciseTimeStamp, 1m);
+Data
+| summarize
+    Total = count(),
+    Successful = countif(resultType == 0),
+    ClientFailures = countif(resultType == 1),
+    ServerFailures = countif(resultType == 2)
+    by bin(PreciseTimeStamp, 1m)
+| join kind=leftouter FailureDetails on PreciseTimeStamp
+| extend successRate = round(todouble(Successful) * 100.0 / todouble(Total), 3)
+| order by PreciseTimeStamp asc
+| serialize
+| extend yesterdayRate = prev(successRate)
+| extend Trend = iif(isnotnull(yesterdayRate), round(successRate - yesterdayRate, 3), 0.0)
+| extend Status = case(
+    Trend > 0, "&#x2191; Improving",
+    Trend &#60; 0, "&#x2193; Declining",
+    Trend == 0 and successRate &#60; 100, "&#x2194; Stable",
+    "Target Met")
+| project PreciseTimeStamp, successRate, Status, Total, Successful, ClientFailures, ServerFailures, FailureSummary
+| order by PreciseTimeStamp asc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q12: Success Rate Time Series (adapted from TDPR Concurrency SLA chart)</h3>
+<pre>// Cluster: azcrp.kusto.windows.net / crp_allprod
+// Adapted for single-run time series visualization
+let StartTime = datetime(2026-02-25 23:35:00);
+let EndTime = datetime(2026-02-26 00:10:00);
+let Step = 1m;
+let GoalSLA = 99.5;
+ApiQosEvent_nonGet
+| where PreciseTimeStamp between(StartTime .. EndTime)
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| where operationName == "VirtualMachines.ResourceOperation.PUT"
+| make-series
+    successRate = round(countif(resultType == 0) * 100.0 / count(), 3)
+    default = real(null)
+    on PreciseTimeStamp from StartTime to EndTime step Step
+| extend Goal = GoalSLA
+| render timechart with (
+    title="Run 8 Success Rate vs 99.5% SLA",
+    ymin=0,
+    ymax=100
+)</pre>
+</div>
+
+<div class="appendix">
+<h3>Q13: DiskRP Component Breakdown (all components)</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+DiskRPExternalComponentQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:35:00) .. datetime(2026-02-26 00:10:00))
+| where subscriptionId =~ "b883903d-216e-45b3-98b0-058819ec9224"
+| summarize Count = count() by componentName
+| order by Count desc</pre>
+</div>
+
+<div class="appendix">
+<h3>Q14: Disk Creation Throughput Timeline</h3>
+<pre>// Cluster: disks.kusto.windows.net / Disks
+DiskManagerApiQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 23:36:00) .. datetime(2026-02-26 00:06:00))
+| where resourceGroupName =~ "TDPR-RG-gq1sussn"
+| where operationName == "Disks.ResourceOperationCallback.PUT"
+| summarize 
+    DiskCreates = count(),
+    AvgMs = round(avg(durationInMilliseconds), 0),
+    P90 = percentile(durationInMilliseconds, 90)
+    by bin(PreciseTimeStamp, 1m)
+| order by PreciseTimeStamp asc</pre>
+</div>
+
+</div><!-- end container -->
+
+<script>
+// CRP Pool Hit/Miss Chart
+new Chart(document.getElementById('crpPoolChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Pool Hit\n(ReusingVM)', 'Pool Miss\n(EscrowFail)'],
+        datasets: [
+            {label:'Count',data:[1645,3306],backgroundColor:['rgba(63,185,80,0.7)','rgba(248,81,73,0.7)']},
+        ]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{title:{display:true,text:'CRP Preprovisioned VM Pool — Hit vs Miss',color:'#e6edf3'},legend:{display:false}},
+        scales:{
+            x:{ticks:{color:'#8b949e'},grid:{color:'#30363d'}},
+            y:{ticks:{color:'#8b949e'},grid:{color:'#30363d'},title:{display:true,text:'Operations',color:'#8b949e'}}
+        }
+    }
+});
+
+// Pool Comparison Chart
+new Chart(document.getElementById('poolComparisonChart'), {
+    type: 'bar',
+    data: {
+        labels: ['CRP VM Pool\n(Disk Reuse)', 'DiskRP SA Pool\n(StorageAcctAlloc)', 'DiskRP PoolMgr\n(TryAllocate)'],
+        datasets: [
+            {label:'Hit Rate %',data:[33.2, 82.1, 98.2],backgroundColor:'rgba(63,185,80,0.7)'},
+            {label:'Miss Rate %',data:[66.8, 17.9, 1.8],backgroundColor:'rgba(248,81,73,0.7)'},
+        ]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{title:{display:true,text:'Three-Layer Pool Hit Rate Comparison',color:'#e6edf3'},legend:{labels:{color:'#8b949e'}}},
+        scales:{
+            x:{stacked:true,ticks:{color:'#8b949e'},grid:{color:'#30363d'}},
+            y:{stacked:true,max:100,ticks:{color:'#8b949e',callback:v=>v+'%'},grid:{color:'#30363d'},title:{display:true,text:'Percentage',color:'#8b949e'}}
+        }
+    }
+});
+
+// Timeline Chart
+new Chart(document.getElementById('timelineChart'), {
+    type: 'line',
+    data: {
+        labels: ['23:38','23:39','23:40','23:41','23:42','23:43','23:44','23:45'],
+        datasets: [
+            {label:'CRP VM PUTs',data:[289,3043,1634,1089,221,121,58,8],borderColor:'#58a6ff',tension:0.3,fill:false},
+            {label:'Disk Creates',data:[3948,5695,4259,1002,131,0,5,0],borderColor:'#3fb950',tension:0.3,fill:false},
+            {label:'DiskRP Pool Allocs',data:[341,516,1183,889,138,1,2,8],borderColor:'#bc8cff',tension:0.3,fill:false},
+            {label:'CRP Pool Hits',data:[289,202,521,500,48,85,0,0],borderColor:'#39d2c0',tension:0.3,fill:false,borderDash:[5,5]},
+        ]
+    },
+    options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{title:{display:true,text:'Cross-RP Operations Timeline (per minute)',color:'#e6edf3'},legend:{labels:{color:'#8b949e'}}},
+        scales:{
+            x:{ticks:{color:'#8b949e'},grid:{color:'#30363d'},title:{display:true,text:'Time (UTC)',color:'#8b949e'}},
+            y:{ticks:{color:'#8b949e'},grid:{color:'#30363d'},title:{display:true,text:'Operations',color:'#8b949e'}}
+        }
+    }
+});
+</script>
+
+</body>
+</html>

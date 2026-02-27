@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross-RP Analysis Report — Run 7 NoNIC (TDPR-RG-8g9re2bt)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;--yellow:#d29922;--blue:#58a6ff;--purple:#bc8cff;--orange:#f0883e;--cyan:#39d2c0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.6;padding:24px}
+.container{max-width:1500px;margin:0 auto}
+h1{font-size:26px;margin-bottom:8px;color:var(--blue)}
+h2{font-size:20px;margin:32px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);color:var(--blue)}
+h3{font-size:16px;margin:20px 0 10px;color:var(--purple)}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px}
+.grid{display:grid;gap:16px;margin-bottom:24px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-5{grid-template-columns:repeat(5,1fr)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+.metric-card{text-align:center}
+.metric-value{font-size:32px;font-weight:bold}
+.metric-label{color:var(--muted);font-size:12px;margin-top:4px}
+.success{color:var(--green)}.warning{color:var(--yellow)}.danger{color:var(--red)}.info{color:var(--blue)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:#1c2128;text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+td{padding:8px 12px;border-bottom:1px solid var(--border)}
+tr:hover{background:#1c2128}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
+.badge-green{background:rgba(63,185,80,.15);color:var(--green)}
+.badge-red{background:rgba(248,81,73,.15);color:var(--red)}
+.badge-yellow{background:rgba(210,153,34,.15);color:var(--yellow)}
+.badge-blue{background:rgba(88,166,255,.15);color:var(--blue)}
+.badge-purple{background:rgba(188,140,255,.15);color:var(--purple)}
+.flow-diagram{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.8;white-space:pre;overflow-x:auto}
+.section-note{background:rgba(88,166,255,.08);border-left:3px solid var(--blue);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.bottleneck{background:rgba(248,81,73,.08);border-left:3px solid var(--red);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.insight{background:rgba(63,185,80,.08);border-left:3px solid var(--green);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px}
+.chart-container{position:relative;height:320px}
+code{background:#21262d;padding:2px 6px;border-radius:4px;font-size:12px;font-family:'Cascadia Code','Fira Code',monospace}
+.appendix{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:20px;margin:12px 0}
+.appendix pre{background:#161b22;padding:16px;border-radius:6px;overflow-x:auto;font-size:12px;line-height:1.6;color:#c9d1d9;border:1px solid var(--border)}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px}
+.toc a{color:var(--blue);text-decoration:none;display:block;padding:4px 0;font-size:13px}
+.toc a:hover{text-decoration:underline}
+@media(max-width:900px){.grid-4,.grid-5{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔬 Cross-RP Analysis Report — Run 7 NoNIC Scale Test</h1>
+<div class="subtitle">
+  Resource Group: <strong>TDPR-RG-8g9re2bt</strong> | Subscription: <strong>b883903d (Reimage2)</strong> | Region: <strong>EastUS2EUAP</strong><br>
+  Time Window: <strong>2026-02-25 19:48 – 20:13 UTC</strong> | VMs: <strong>5,000 × Standard_D2ds_v5</strong> | Approach: <strong>Inline networkInterfaceConfigurations (NoNIC)</strong><br>
+  Data Sources: ARM (armprodgbl.kusto), CRP (azcrp.kusto), DiskRP (disks.kusto) | Generated: 2026-02-25
+</div>
+
+<!-- Table of Contents -->
+<div class="toc">
+  <strong style="color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:1px">Table of Contents</strong>
+  <a href="#executive">1. Executive Summary</a>
+  <a href="#callflow">2. End-to-End Call Flow</a>
+  <a href="#arm">3. ARM Layer Analysis</a>
+  <a href="#crp">4. CRP Layer Analysis</a>
+  <a href="#diskrp">5. DiskRP Layer Analysis</a>
+  <a href="#srp">6. SRP Layer Analysis</a>
+  <a href="#timeline">7. Cross-RP Timeline Correlation</a>
+  <a href="#throttle">8. Throttle & Bottleneck Analysis</a>
+  <a href="#findings">9. Findings & Recommendations</a>
+  <a href="#appendix">10. Appendix: Kusto Queries Used</a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="executive">1. Executive Summary</h2>
+<!-- ============================================================ -->
+
+<div class="grid grid-5">
+  <div class="card metric-card"><div class="metric-value success">5,000</div><div class="metric-label">VMs Created</div></div>
+  <div class="card metric-card"><div class="metric-value success">25:11</div><div class="metric-label">Deploy Duration</div></div>
+  <div class="card metric-card"><div class="metric-value info">1.17M</div><div class="metric-label">Total ARM Requests</div></div>
+  <div class="card metric-card"><div class="metric-value warning">148,949</div><div class="metric-label">Total ARM 429 Throttles</div></div>
+  <div class="card metric-card"><div class="metric-value success">0</div><div class="metric-label">NIC 429 Throttles</div></div>
+</div>
+
+<div class="grid grid-4">
+  <div class="card metric-card"><div class="metric-value info">24,930</div><div class="metric-label">Total Resources Created</div></div>
+  <div class="card metric-card"><div class="metric-value success">793ms</div><div class="metric-label">CRP VM PUT P50</div></div>
+  <div class="card metric-card"><div class="metric-value success">0ms</div><div class="metric-label">DiskRP PUT P50</div></div>
+  <div class="card metric-card"><div class="metric-value success">99.4%</div><div class="metric-label">VM Success Rate</div></div>
+</div>
+
+<div class="insight">
+  <strong>Key Achievement:</strong> By using inline <code>networkInterfaceConfigurations</code>, NIC creation was moved from ARM (where it was throttled at 24K-50K 429s in prior runs) 
+  to CRP's internal NrpCallback (10ms P50, zero throttling). This is the #1 factor in the 2.5× speed improvement (25 min vs 63 min).
+</div>
+
+<!-- ============================================================ -->
+<h2 id="callflow">2. End-to-End Call Flow</h2>
+<!-- ============================================================ -->
+
+<div class="flow-diagram"><span style="color:#58a6ff">Client (Deploy-ScaleTest-NoNIC.ps1)</span>  ──  10 parallel batch deployments × 500 VMs
+  │
+  ├──▶ <span style="color:#f0883e">ARM</span> <span style="color:#8b949e">(Resource Manager)</span>
+  │     <span style="color:#8b949e">Total requests:</span> <span style="color:#58a6ff">1,166,462</span> │ Success: 290,568 │ 429s: <span style="color:#d29922">148,949</span> │ InFlight: 583,232
+  │     VM PUT:   P50=<span style="color:#d29922">46ms</span>   P90=3,207ms  P99=<span style="color:#f85149">10,422ms</span>  │ 30,614 total │ 4,997 success │ <span style="color:#d29922">10,310 throttled</span>
+  │     Disk PUT: P50=<span style="color:#3fb950">15ms</span>   P90=183ms    P99=635ms       │ 68,156 total │ 14,946 success │ <span style="color:#d29922">19,132 throttled</span>
+  │     NIC PUT:  P50=<span style="color:#3fb950">92ms</span>   P90=305ms    P99=2,234ms     │ 9,964 total  │ 4,982 success  │ <span style="color:#3fb950">0 throttled ✅</span>
+  │
+  ├──▶ <span style="color:#bc8cff">CRP</span> <span style="color:#8b949e">(Compute Resource Provider)</span>
+  │     VM PUT:          <span style="color:#d29922">P50=794ms</span>   P90=3,607ms  P99=<span style="color:#f85149">10,777ms</span>  │ 8,090 ops
+  │     NrpCallback:     <span style="color:#3fb950">P50=10ms</span>    P90=47ms     P99=128ms       │ 4,769 ops  (internal NIC creation)
+  │     DiskRPCallback:  <span style="color:#3fb950">P50=3ms</span>     P90=10ms     P99=612ms       │ 4,729 ops  (internal disk allocation)
+  │     Preflight:       P50=279ms   P90=2,075ms  P99=3,327ms     │ 60 ops     (10 batches × 6 retries)
+  │     Async Completion: <span style="color:#3fb950">P50=0ms</span>                                  │ 4,753 ops
+  │
+  ├──▶ <span style="color:#58a6ff">DiskRP</span> <span style="color:#8b949e">(Disk Resource Provider)</span>
+  │     PUT callback:        <span style="color:#3fb950">P50=0ms</span>   P90=15ms   P99=15ms    │ 14,946 ops │ <span style="color:#3fb950">100% success</span>
+  │     AllocateDisks:       P50=15ms  P90=15ms   P99=62ms    │ 4,982 ops  │ <span style="color:#3fb950">100% success</span>
+  │     ValidateAndProtect:  <span style="color:#3fb950">P50=0ms</span>   P90=15ms   P99=15ms    │ 6,722 ops  │ <span style="color:#3fb950">100% success</span>
+  │     GET (polling):       <span style="color:#3fb950">P50=0ms</span>   P90=0ms    P99=15ms    │ 50,122 ops │ 89.6% (10.4% = pending state)
+  │
+  └──▶ <span style="color:#d29922">SRP</span> <span style="color:#8b949e">(Storage Resource Provider — N/A for PremiumV2_LRS)</span>
+        PremiumV2_LRS uses DirectDrive backend — SRP returned <span style="color:#8b949e">0 rows</span> for this run.</div>
+
+<div class="section-note">
+  <strong>Note on SRP:</strong> SRP (Storage Resource Provider) shows <strong>0 rows</strong> for this run. PremiumV2_LRS disks use the DirectDrive storage backend, 
+  bypassing traditional SRP storage accounts. For scale tests using Standard_LRS disks, SRP telemetry would show storage account creation and management operations.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="arm">3. ARM Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<h3>3.1 ARM PUT Operations — Per Resource Type</h3>
+<table>
+  <tr>
+    <th>Resource Type</th><th>Total PUTs</th><th>Success</th><th>429 Throttled</th><th>In-Flight</th>
+    <th>429 Rate</th><th>P50</th><th>P90</th><th>P99</th><th>Max</th>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">Disks</span></td>
+    <td>68,156</td><td class="success">14,946</td><td class="danger">19,132</td><td>34,078</td>
+    <td><span class="badge badge-yellow">28.1%</span></td>
+    <td>15ms</td><td>183ms</td><td>635ms</td><td>16,680ms</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-red">VMs</span></td>
+    <td>30,614</td><td class="success">4,997</td><td class="danger">10,310</td><td>15,307</td>
+    <td><span class="badge badge-yellow">33.7%</span></td>
+    <td>46ms</td><td>3,207ms</td><td>10,422ms</td><td>22,749ms</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-green">NICs (CRP-managed)</span></td>
+    <td>9,964</td><td class="success">4,982</td><td class="success">0</td><td>4,982</td>
+    <td><span class="badge badge-green">0%</span></td>
+    <td>92ms</td><td>305ms</td><td>2,234ms</td><td>5,495ms</td>
+  </tr>
+  <tr style="background:#1c2128;font-weight:600">
+    <td>Total PUTs</td>
+    <td>108,734</td><td>24,925</td><td>29,442</td><td>54,367</td>
+    <td><span class="badge badge-yellow">27.1%</span></td>
+    <td colspan="4">—</td>
+  </tr>
+</table>
+
+<div class="insight">
+  <strong>CRP-Managed NICs bypass ARM throttling:</strong> The 9,964 NIC PUTs come from CRP's internal path to NRP. 
+  They appear as ARM resources but are NOT subject to user-initiated ARM rate limits. Zero 429s across the entire run.
+</div>
+
+<h3>3.2 ARM GET Operations — Polling Overhead</h3>
+<table>
+  <tr><th>Resource Type</th><th>Total GETs</th><th>Success</th><th>429 Throttled</th><th>404 NotFound</th><th>P50</th><th>P90</th><th>P99</th></tr>
+  <tr>
+    <td>VMs</td><td>859,052</td><td>188,104</td><td class="danger">97,711</td><td>143,710</td>
+    <td>6ms</td><td>104ms</td><td>1,203ms</td>
+  </tr>
+  <tr>
+    <td>NICs</td><td>101,892</td><td>44,662</td><td class="warning">6,284</td><td>0</td>
+    <td>20ms</td><td>87ms</td><td>155ms</td>
+  </tr>
+  <tr>
+    <td>Disks</td><td>90,918</td><td>29,948</td><td class="warning">15,511</td><td>0</td>
+    <td>9ms</td><td>49ms</td><td>101ms</td>
+  </tr>
+</table>
+
+<div class="bottleneck">
+  <strong>Polling amplification:</strong> ARM received <strong>859K VM GET requests</strong> for 5,000 VMs — a 172× amplification factor. 
+  This polling generates 97,711 GET 429s. The 143K 404s are initial polls before the VM resource is fully created.
+</div>
+
+<h3>3.3 ARM Total Request Summary</h3>
+<div class="grid grid-4">
+  <div class="card metric-card"><div class="metric-value info">1,166,462</div><div class="metric-label">Total ARM Requests</div></div>
+  <div class="card metric-card"><div class="metric-value success">290,568</div><div class="metric-label">2xx Success</div></div>
+  <div class="card metric-card"><div class="metric-value warning">148,949</div><div class="metric-label">429 Throttled</div></div>
+  <div class="card metric-card"><div class="metric-value info">583,232</div><div class="metric-label">In-Flight (-1)</div></div>
+</div>
+
+<h3>3.4 ARM PUT Timeline — Per Minute</h3>
+<div class="card">
+  <div class="chart-container"><canvas id="armPutTimeline"></canvas></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="crp">4. CRP Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<h3>4.1 CRP Operation Breakdown</h3>
+<table>
+  <tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>P50</th><th>P90</th><th>P99</th><th>Max</th></tr>
+  <tr>
+    <td>VM ModelAndInstanceView GET</td><td>122,797</td><td>93ms</td><td>20ms</td><td>78ms</td><td>2,138ms</td><td>9,493ms</td>
+  </tr>
+  <tr>
+    <td>VM Model GET</td><td>43,367</td><td>16ms</td><td>0ms</td><td>6ms</td><td>60ms</td><td>9,688ms</td>
+  </tr>
+  <tr>
+    <td>VMExtensions GET</td><td>9,906</td><td>1ms</td><td>0ms</td><td>5ms</td><td>10ms</td><td>50ms</td>
+  </tr>
+  <tr style="background:#1c2128">
+    <td><strong>VM ResourceOperation PUT</strong></td><td><strong>8,090</strong></td><td class="warning"><strong>1,400ms</strong></td>
+    <td class="warning"><strong>794ms</strong></td><td class="danger"><strong>3,607ms</strong></td><td class="danger"><strong>10,777ms</strong></td><td>11,794ms</td>
+  </tr>
+  <tr style="background:rgba(63,185,80,.05)">
+    <td><strong>NrpCallback (NIC Creation)</strong></td><td>4,769</td><td class="success">24ms</td>
+    <td class="success">10ms</td><td>47ms</td><td>128ms</td><td>3,492ms</td>
+  </tr>
+  <tr style="background:rgba(63,185,80,.05)">
+    <td><strong>DiskRPCallback (Disk Alloc)</strong></td><td>4,729</td><td class="success">27ms</td>
+    <td class="success">3ms</td><td>10ms</td><td>612ms</td><td>3,533ms</td>
+  </tr>
+  <tr>
+    <td>AsyncOperationCompletion</td><td>4,753</td><td>0ms</td><td>0ms</td><td>0ms</td><td>5ms</td><td>107ms</td>
+  </tr>
+  <tr>
+    <td>VMInfoInternal GET</td><td>4,484</td><td>4ms</td><td>0ms</td><td>5ms</td><td>11ms</td><td>2,693ms</td>
+  </tr>
+  <tr>
+    <td>GetVMs GET</td><td>450</td><td>54ms</td><td>41ms</td><td>81ms</td><td>281ms</td><td>436ms</td>
+  </tr>
+  <tr>
+    <td>Deployments Preflight POST</td><td>60</td><td>573ms</td><td>279ms</td><td>2,075ms</td><td>3,327ms</td><td>3,327ms</td>
+  </tr>
+</table>
+
+<h3>4.2 CRP VM PUT Latency Over Time</h3>
+<div class="card">
+  <div class="chart-container"><canvas id="crpLatencyChart"></canvas></div>
+</div>
+
+<div class="section-note">
+  <strong>CRP VM PUT pattern:</strong> Initial minute (19:48) shows P50=69ms and P99=1,263ms — fast cold start. 
+  By 19:50, P50 jumps to 1,215ms and P99 to 11,291ms as CRP processes the burst of 5K VMs. 
+  The 8,090 CRP PUT ops (vs 4,997 ARM success PUTs) indicate CRP retries ~1.6× per successful VM.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="diskrp">5. DiskRP Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<h3>5.1 DiskRP Operation Breakdown</h3>
+<table>
+  <tr><th>Operation</th><th>Count</th><th>Avg (ms)</th><th>P50</th><th>P90</th><th>P99</th><th>Max</th><th>Success</th></tr>
+  <tr>
+    <td>Resource GET (polling)</td><td>50,122</td><td>1ms</td><td>0ms</td><td>0ms</td><td>15ms</td><td>78ms</td>
+    <td><span class="badge badge-yellow">89.6%</span> (10.4% = pending state)</td>
+  </tr>
+  <tr style="background:rgba(63,185,80,.05)">
+    <td><strong>ResourceOperation PUT (callback)</strong></td><td><strong>14,946</strong></td><td class="success"><strong>2ms</strong></td>
+    <td class="success"><strong>0ms</strong></td><td>15ms</td><td>15ms</td><td>187ms</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+  <tr>
+    <td>ValidateAndProtectDisks POST</td><td>6,722</td><td>4ms</td><td>0ms</td><td>15ms</td><td>15ms</td><td>140ms</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+  <tr>
+    <td>AllocateDisks POST</td><td>4,982</td><td>9ms</td><td>15ms</td><td>15ms</td><td>62ms</td><td>140ms</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+  <tr>
+    <td>AsyncOperationCompletion</td><td>4,982</td><td>1ms</td><td>0ms</td><td>0ms</td><td>15ms</td><td>78ms</td>
+    <td><span class="badge badge-green">100%</span></td>
+  </tr>
+</table>
+
+<h3>5.2 DiskRP PUT Timeline — Disks Created per Minute</h3>
+<div class="card">
+  <div class="chart-container"><canvas id="diskTimeline"></canvas></div>
+</div>
+
+<div class="insight">
+  <strong>DiskRP is blazing fast:</strong> 14,946 disk PUTs completed with avg 2ms latency, 100% success rate. 
+  Peak throughput: 4,379 disks/minute. All disk operations completed within 6 minutes (19:48–19:54 UTC). 
+  DiskRP is NOT a bottleneck — its internal processing is sub-millisecond.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="srp">6. SRP Layer Analysis</h2>
+<!-- ============================================================ -->
+
+<div class="card">
+  <div class="section-note">
+    <strong>SRP returned 0 rows</strong> for subscription <code>b883903d</code> during the 19:40–20:30 UTC time window.<br><br>
+    This is expected behavior for <strong>PremiumV2_LRS</strong> managed disks. Unlike Standard_LRS disks which use SRP-managed storage accounts,
+    PremiumV2_LRS disks use the <strong>DirectDrive</strong> storage backend where DiskRP communicates directly with the storage layer,
+    bypassing SRP entirely.<br><br>
+    <strong>Implication:</strong> For future scale tests using Standard_LRS disk SKUs, SRP telemetry 
+    (<code>RegionalSRP_ServiceApiQosEvent</code> on <code>xcontrolplane.kusto.windows.net/SRP</code>) would show 
+    storage account creation and management latency data.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="timeline">7. Cross-RP Timeline Correlation</h2>
+<!-- ============================================================ -->
+
+<h3>8.1 Synchronized Timeline — All RPs per Minute</h3>
+<div class="card" style="overflow-x:auto">
+<table>
+  <tr>
+    <th>Time (UTC)</th>
+    <th>ARM VM PUT ✓</th><th>ARM VM 429</th>
+    <th>ARM Disk PUT ✓</th><th>ARM Disk 429</th>
+    <th>ARM NIC PUT ✓</th><th>ARM NIC 429</th>
+    <th>CRP VM PUT</th><th>CRP P50</th>
+    <th>DiskRP PUT</th><th>DiskRP Avg</th>
+  </tr>
+  <tr>
+    <td><strong>19:48</strong></td>
+    <td class="success">1,795</td><td class="danger">3,652</td>
+    <td class="success">3,324</td><td class="danger">6,660</td>
+    <td class="success">736</td><td class="success">0</td>
+    <td>314</td><td>69ms</td>
+    <td>3,324</td><td>2ms</td>
+  </tr>
+  <tr>
+    <td><strong>19:49</strong></td>
+    <td class="success">1,645</td><td class="danger">5,630</td>
+    <td class="success">3,299</td><td class="danger">9,939</td>
+    <td class="success">1,040</td><td class="success">0</td>
+    <td>3,380</td><td>35ms</td>
+    <td>3,299</td><td>2ms</td>
+  </tr>
+  <tr>
+    <td><strong>19:50</strong></td>
+    <td class="success">829</td><td class="warning">799</td>
+    <td class="success">4,379</td><td class="warning">1,816</td>
+    <td class="success">1,474</td><td class="success">0</td>
+    <td>1,917</td><td class="warning">1,215ms</td>
+    <td>4,379</td><td>2ms</td>
+  </tr>
+  <tr>
+    <td><strong>19:51</strong></td>
+    <td class="success">502</td><td class="warning">226</td>
+    <td class="success">2,556</td><td class="warning">717</td>
+    <td class="success">1,066</td><td class="success">0</td>
+    <td>1,406</td><td class="warning">1,411ms</td>
+    <td>2,558</td><td>2ms</td>
+  </tr>
+  <tr>
+    <td><strong>19:52</strong></td>
+    <td class="success">207</td><td>3</td>
+    <td class="success">1,331</td><td>0</td>
+    <td class="success">647</td><td class="success">0</td>
+    <td>859</td><td>1,265ms</td>
+    <td>1,329</td><td>2ms</td>
+  </tr>
+  <tr>
+    <td><strong>19:53</strong></td>
+    <td>16</td><td>0</td>
+    <td>48</td><td>0</td>
+    <td>14</td><td class="success">0</td>
+    <td>142</td><td>1,563ms</td>
+    <td>48</td><td>3ms</td>
+  </tr>
+  <tr>
+    <td><strong>19:54</strong></td>
+    <td>3</td><td>0</td>
+    <td>9</td><td>0</td>
+    <td>5</td><td class="success">0</td>
+    <td>38</td><td>934ms</td>
+    <td>9</td><td>3ms</td>
+  </tr>
+</table>
+</div>
+
+<h3>8.2 Cross-RP Correlation Chart</h3>
+<div class="card">
+  <div class="chart-container"><canvas id="crossRPChart"></canvas></div>
+</div>
+
+<div class="section-note">
+  <strong>Timeline Analysis:</strong><br>
+  • <strong>T+0 to T+2 min:</strong> Massive burst — 3,440 VMs, 6,623 Disks, 1,776 NICs created. ARM absorbs 9,282 VM 429s and 16,599 Disk 429s.<br>
+  • <strong>T+2 to T+4 min:</strong> Throttle pressure drops sharply. ARM catches up, VMs continue flowing.<br>
+  • <strong>T+4 to T+6 min:</strong> Tail of creation — only 19 VMs and 57 Disks remaining. Nearly all PUTs complete.<br>
+  • <strong>T+6 to T+25 min:</strong> Zero new ARM PUTs. CRP async operations finish (zone allocation retries for batch failures).<br>
+  • <strong>NIC PUTs (CRP-managed):</strong> Peak at T+2 min (1,474/min). Lag behind VMs because CRP creates NICs after accepting the VM PUT.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="throttle">8. Throttle & Bottleneck Analysis</h2>
+<!-- ============================================================ -->
+
+<h3>9.1 Throttle Summary Across All Layers</h3>
+<div class="card">
+  <div class="chart-container"><canvas id="throttleChart"></canvas></div>
+</div>
+
+<table>
+  <tr><th>Layer</th><th>Operation</th><th>429 Count</th><th>Impact</th><th>Root Cause</th></tr>
+  <tr>
+    <td><span class="badge badge-yellow">ARM</span></td>
+    <td>VM GET (polling)</td><td class="danger">97,711</td>
+    <td class="warning">Medium</td><td>172× GET amplification per VM; ARM rate limit</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">ARM</span></td>
+    <td>Disk PUT</td><td class="danger">19,132</td>
+    <td class="danger">High</td><td>15K disk PUTs in 2 min overwhelm ARM rate limit</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">ARM</span></td>
+    <td>Disk GET (polling)</td><td class="warning">15,511</td>
+    <td class="warning">Medium</td><td>Polling for disk creation status</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">ARM</span></td>
+    <td>VM PUT</td><td class="danger">10,310</td>
+    <td class="danger">High</td><td>5K VM PUTs in 2 min overwhelm ARM rate limit</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">ARM</span></td>
+    <td>NIC GET</td><td class="warning">6,284</td>
+    <td class="success">Low</td><td>Polling for CRP-managed NIC status</td>
+  </tr>
+  <tr style="background:rgba(63,185,80,.1)">
+    <td><span class="badge badge-green">ARM</span></td>
+    <td>NIC PUT</td><td class="success"><strong>0</strong></td>
+    <td class="success"><strong>None ✅</strong></td><td><strong>CRP-managed NICs bypass ARM throttle path</strong></td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-purple">CRP</span></td>
+    <td>All operations</td><td class="success">0</td>
+    <td class="success">None</td><td>CRP has its own rate limits, not hit</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-blue">DiskRP</span></td>
+    <td>All operations</td><td class="success">0</td>
+    <td class="success">None</td><td>DiskRP operates at sub-ms; no internal throttling</td>
+  </tr>
+</table>
+
+<h3>9.2 Bottleneck Waterfall</h3>
+<div class="flow-diagram"><span style="color:#f85149">BOTTLENECK #1: ARM Rate Limiting on Disk PUTs</span>
+  │ 19,132 429s │ DiskRP's ArmRegistrationBlock waits P99=156s for ARM to accept disk registration
+  │ Impact: Delays disk provisioning completion, extends overall deployment time
+  │
+<span style="color:#d29922">BOTTLENECK #2: ARM Rate Limiting on VM PUTs</span>
+  │ 10,310 429s │ 5,000 VM PUTs fired in 2 min → 33.7% throttle rate
+  │ Impact: CRP retries, extending per-VM creation latency
+  │
+<span style="color:#d29922">BOTTLENECK #3: ARM GET Polling Amplification</span>
+  │ 97,711 VM GET 429s │ 172× GET amplification per VM (859K GETs for 5K VMs)
+  │ Impact: Consumes ARM rate limit budget, slows down GET response times
+  │
+<span style="color:#d29922">BOTTLENECK #4: Zone 1 Capacity Exhaustion</span>
+  │ 14 VMs failed │ OverconstrainedZonalAllocationRequest in Zone 1
+  │ Impact: Minor (0.3% failure rate), but 4 batches reported as "Failed"
+  │
+<span style="color:#3fb950">RESOLVED: NIC Throttling (was #1 in Runs 1-6)</span>
+  │ 0 NIC 429s │ CRP's NrpCallback creates NICs internally at 10ms P50
+  │ Impact: Eliminated the #1 bottleneck from all prior runs ✅</div>
+
+<!-- ============================================================ -->
+<h2 id="findings">9. Findings & Recommendations</h2>
+<!-- ============================================================ -->
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3 style="color:var(--green)">✅ What Worked</h3>
+    <div class="insight">
+      <strong>Inline NIC Config:</strong> Eliminated 24K+ NIC 429s (was #1 bottleneck). CRP's NrpCallback is 100× faster than ARM NIC PUTs.
+    </div>
+    <div class="insight">
+      <strong>Larger Batches:</strong> 500 VMs/batch (vs 250) with 1 resource/VM means fewer deployments and less ARM overhead.
+    </div>
+    <div class="insight">
+      <strong>DiskRP Performance:</strong> 14,946 disks at 2ms avg, 100% success. DiskRP internal pipeline is not a bottleneck.
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--yellow)">⚠️ Opportunities</h3>
+    <div class="bottleneck">
+      <strong>Stagger Disk PUTs:</strong> 15K disk PUTs in 2 min → 19K 429s. Adding 30s delay between batch starts could reduce throttling.
+    </div>
+    <div class="bottleneck">
+      <strong>Reduce GET Polling:</strong> 859K VM GETs is excessive. Increase polling interval from 5s to 15s to reduce 97K GET 429s.
+    </div>
+    <div class="bottleneck">
+      <strong>Zone Allocation:</strong> Route more VMs to Zone 3 (100% success) vs Zone 1 (0.6% failure rate).
+    </div>
+    <div class="section-note">
+      <strong>Batch Size 800:</strong> With 1 resource/VM, ARM allows up to 800 resources per deployment. Testing batch=800 would reduce from 10 to 7 deployments.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="appendix">10. Appendix: Kusto Queries Used</h2>
+<!-- ============================================================ -->
+
+<h3>10.1 ARM Queries (armprodgbl.eastus.kusto.windows.net / ARMProd)</h3>
+
+<div class="appendix">
+<strong>Q1: ARM PUT Summary per Resource Type</strong>
+<pre>
+Unionizer("Requests","HttpIncomingRequests")
+| where TIMESTAMP between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where targetUri contains "TDPR-RG-8g9re2bt"
+| where toupper(tostring(httpMethod)) == "PUT"
+| extend resType = extract(@"providers/([^/]+/[^/]+)", 1, targetUri)
+| where resType in ("Microsoft.Compute/virtualMachines", "Microsoft.Compute/disks", 
+                     "Microsoft.Network/networkInterfaces")
+| extend statusCode = tolong(httpStatusCode)
+| summarize 
+    Total = count(),
+    Success = countif(statusCode >= 200 and statusCode < 300),
+    Throttled429 = countif(statusCode == 429),
+    OtherFail = countif(statusCode >= 400 and statusCode != 429),
+    InFlight = countif(statusCode == -1),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99),
+    MaxLatency = max(durationInMilliseconds),
+    AvgLatency = avg(durationInMilliseconds),
+    MinTime = min(PreciseTimeStamp),
+    MaxTime = max(PreciseTimeStamp)
+    by resType
+| order by Total desc
+</pre>
+</div>
+
+<div class="appendix">
+<strong>Q2: ARM PUT Timeline — Success & Throttle per Minute</strong>
+<pre>
+Unionizer("Requests","HttpIncomingRequests")
+| where TIMESTAMP between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where targetUri contains "TDPR-RG-8g9re2bt"
+| where toupper(tostring(httpMethod)) == "PUT"
+| extend resType = extract(@"providers/([^/]+/[^/]+)", 1, targetUri)
+| where resType in ("Microsoft.Compute/virtualMachines", "Microsoft.Compute/disks", 
+                     "Microsoft.Network/networkInterfaces")
+| extend isSuccess = tolong(httpStatusCode) >= 200 and tolong(httpStatusCode) < 300
+| extend isThrottled = tolong(httpStatusCode) == 429
+| summarize 
+    SuccessPuts = countif(isSuccess),
+    ThrottledPuts = countif(isThrottled)
+    by bin(PreciseTimeStamp, 1m), resType
+| order by PreciseTimeStamp asc, resType asc
+</pre>
+</div>
+
+<div class="appendix">
+<strong>Q3: ARM GET Operations — Polling Summary</strong>
+<pre>
+Unionizer("Requests","HttpIncomingRequests")
+| where TIMESTAMP between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where targetUri contains "TDPR-RG-8g9re2bt"
+| where toupper(tostring(httpMethod)) == "GET"
+| extend resType = extract(@"providers/([^/]+/[^/]+)", 1, targetUri)
+| where resType in ("Microsoft.Compute/virtualMachines", "Microsoft.Compute/disks", 
+                     "Microsoft.Network/networkInterfaces")
+| extend statusCode = tolong(httpStatusCode)
+| summarize 
+    Total = count(),
+    Success = countif(statusCode >= 200 and statusCode < 300),
+    Throttled429 = countif(statusCode == 429),
+    NotFound404 = countif(statusCode == 404),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99)
+    by resType
+| order by Total desc
+</pre>
+</div>
+
+<div class="appendix">
+<strong>Q4: ARM Total Request Summary</strong>
+<pre>
+Unionizer("Requests","HttpIncomingRequests")
+| where TIMESTAMP between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where targetUri contains "TDPR-RG-8g9re2bt"
+| extend statusCode = tolong(httpStatusCode)
+| summarize 
+    Total = count(),
+    Success2xx = countif(statusCode >= 200 and statusCode < 300),
+    Throttled429 = countif(statusCode == 429),
+    NotFound404 = countif(statusCode == 404),
+    ServerError5xx = countif(statusCode >= 500),
+    InFlight = countif(statusCode == -1),
+    MinTime = min(PreciseTimeStamp),
+    MaxTime = max(PreciseTimeStamp)
+</pre>
+</div>
+
+<h3>10.2 CRP Queries (azcrp.kusto.windows.net / crp_allprod)</h3>
+
+<div class="appendix">
+<strong>Q5: CRP Full Operation Breakdown</strong>
+<pre>
+ApiQosEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where resourceGroupName =~ "TDPR-RG-8g9re2bt"
+| summarize 
+    Count = count(),
+    AvgMs = avg(durationInMilliseconds),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99),
+    MaxMs = max(durationInMilliseconds),
+    MinTime = min(PreciseTimeStamp),
+    MaxTime = max(PreciseTimeStamp)
+    by operationName
+| order by Count desc
+</pre>
+</div>
+
+<div class="appendix">
+<strong>Q6: CRP VM PUT Latency per Minute</strong>
+<pre>
+ApiQosEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 19:48:00) .. datetime(2026-02-25 20:15:00))
+| where resourceGroupName =~ "TDPR-RG-8g9re2bt"
+| where operationName == "VirtualMachines.ResourceOperation.PUT"
+| summarize 
+    Count = count(),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99)
+    by bin(PreciseTimeStamp, 1m)
+| order by PreciseTimeStamp asc
+</pre>
+</div>
+
+<h3>10.3 DiskRP Queries (disks.kusto.windows.net / Disks)</h3>
+
+<div class="appendix">
+<strong>Q7: DiskRP Operation Breakdown</strong>
+<pre>
+DiskManagerApiQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where resourceGroupName =~ "TDPR-RG-8g9re2bt"
+| summarize 
+    Count = count(),
+    AvgMs = avg(durationInMilliseconds),
+    P50 = percentile(durationInMilliseconds, 50),
+    P90 = percentile(durationInMilliseconds, 90),
+    P99 = percentile(durationInMilliseconds, 99),
+    MaxMs = max(durationInMilliseconds),
+    SuccessRate = round(100.0 * countif(httpStatusCode >= 200 and httpStatusCode < 300) / count(), 1),
+    MinTime = min(PreciseTimeStamp),
+    MaxTime = max(PreciseTimeStamp)
+    by operationName
+| order by Count desc
+</pre>
+</div>
+
+<div class="appendix">
+<strong>Q8: DiskRP PUT Timeline per Minute</strong>
+<pre>
+DiskManagerApiQoSEvent
+| where PreciseTimeStamp between(datetime(2026-02-25 19:40:00) .. datetime(2026-02-25 20:30:00))
+| where resourceGroupName =~ "TDPR-RG-8g9re2bt"
+| where operationName has "PUT" or operationName has "Create"
+| summarize 
+    TotalOps = count(),
+    SuccessOps = countif(httpStatusCode >= 200 and httpStatusCode < 300),
+    AvgDurationMs = avg(durationInMilliseconds),
+    P50Duration = percentile(durationInMilliseconds, 50),
+    P90Duration = percentile(durationInMilliseconds, 90),
+    P99Duration = percentile(durationInMilliseconds, 99)
+    by bin(PreciseTimeStamp, 1m)
+| order by PreciseTimeStamp asc
+</pre>
+</div>
+
+<h3>10.4 Kusto Cluster Connection Details</h3>
+<table>
+  <tr><th>Layer</th><th>Cluster URL</th><th>Database</th><th>Primary Table</th></tr>
+  <tr><td>ARM</td><td><code>armprodgbl.eastus.kusto.windows.net</code></td><td>ARMProd</td><td><code>Unionizer("Requests","HttpIncomingRequests")</code></td></tr>
+  <tr><td>CRP</td><td><code>azcrp.kusto.windows.net</code></td><td>crp_allprod</td><td><code>ApiQosEvent</code></td></tr>
+  <tr><td>DiskRP</td><td><code>disks.kusto.windows.net</code></td><td>Disks</td><td><code>DiskManagerApiQoSEvent</code></td></tr>
+  <tr><td>SRP</td><td><code>xcontrolplane.kusto.windows.net</code></td><td>SRP</td><td><code>RegionalSRP_ServiceApiQosEvent</code> (N/A for PremiumV2_LRS)</td></tr>
+</table>
+
+<h3>10.5 Key Column Differences Across RPs</h3>
+<table>
+  <tr><th>Column</th><th>ARM</th><th>CRP</th><th>DiskRP (Manager)</th></tr>
+  <tr><td>Duration</td><td><code>durationInMilliseconds</code></td><td><code>durationInMilliseconds</code></td><td><code>durationInMilliseconds</code></td></tr>
+  <tr><td>Status code</td><td><code>httpStatusCode</code> (long)</td><td><code>resultCode</code> (string)</td><td><code>httpStatusCode</code> (long)</td></tr>
+  <tr><td>RG filter</td><td>via <code>targetUri</code></td><td><code>resourceGroupName</code></td><td><code>resourceGroupName</code></td><td><code>subscriptionId</code> only</td></tr>
+  <tr><td>Timestamp</td><td><code>PreciseTimeStamp</code></td><td><code>PreciseTimeStamp</code></td><td><code>PreciseTimeStamp</code></td><td><code>PreciseTimeStamp</code></td></tr>
+  <tr><td>InFlight marker</td><td><code>httpStatusCode = -1</code></td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+</table>
+
+</div>
+
+<script>
+// ARM PUT Timeline
+new Chart(document.getElementById('armPutTimeline'), {
+  type: 'bar',
+  data: {
+    labels: ['19:48', '19:49', '19:50', '19:51', '19:52', '19:53', '19:54'],
+    datasets: [
+      { label: 'VM PUTs ✓', data: [1795,1645,829,502,207,16,3], backgroundColor: 'rgba(63,185,80,0.8)', stack: 'a' },
+      { label: 'VM 429s', data: [3652,5630,799,226,3,0,0], backgroundColor: 'rgba(248,81,73,0.5)', stack: 'b' },
+      { label: 'Disk PUTs ✓', data: [3324,3299,4379,2556,1331,48,9], backgroundColor: 'rgba(88,166,255,0.8)', stack: 'c' },
+      { label: 'Disk 429s', data: [6660,9939,1816,717,0,0,0], backgroundColor: 'rgba(210,153,34,0.5)', stack: 'd' },
+      { label: 'NIC PUTs ✓ (CRP)', data: [736,1040,1474,1066,647,14,5], backgroundColor: 'rgba(188,140,255,0.8)', stack: 'e' },
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c9d1d9',font:{size:11}}}},
+    scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Time (UTC)',color:'#8b949e'}},
+             y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Request Count',color:'#8b949e'}} }
+  }
+});
+
+// CRP Latency
+new Chart(document.getElementById('crpLatencyChart'), {
+  type: 'line',
+  data: {
+    labels: ['19:48','19:49','19:50','19:51','19:52','19:53','19:54','19:55','19:56','19:57'],
+    datasets: [
+      { label: 'P50 (ms)', data: [69,35,1215,1411,1265,1563,934,1734,1240,2012], borderColor:'#3fb950', fill:false, tension:0.3, borderWidth:2 },
+      { label: 'P90 (ms)', data: [555,1303,5701,4357,6452,3669,3573,4405,1952,9702], borderColor:'#d29922', fill:false, tension:0.3, borderWidth:2 },
+      { label: 'P99 (ms)', data: [1263,6463,11291,8678,10575,9953,5151,8058,1952,9702], borderColor:'#f85149', fill:false, tension:0.3, borderWidth:2, borderDash:[5,5] },
+      { label: 'Count', data: [314,3380,1917,1406,859,142,38,19,4,3], borderColor:'#58a6ff', fill:false, tension:0.3, borderWidth:1, borderDash:[2,2], yAxisID:'y1' }
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c9d1d9'}}},
+    scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},
+             y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Latency (ms)',color:'#8b949e'}},
+             y1:{position:'right',ticks:{color:'#58a6ff'},grid:{display:false},title:{display:true,text:'Op Count',color:'#58a6ff'}} }
+  }
+});
+
+// DiskRP Timeline
+new Chart(document.getElementById('diskTimeline'), {
+  type: 'bar',
+  data: {
+    labels: ['19:48','19:49','19:50','19:51','19:52','19:53','19:54'],
+    datasets: [{
+      label: 'DiskRP PUTs (100% success)',
+      data: [3324,3299,4379,2558,1329,48,9],
+      backgroundColor: 'rgba(88,166,255,0.8)',
+      borderColor:'#58a6ff', borderWidth:1
+    }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c9d1d9'}}},
+    scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},
+             y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Disk PUTs',color:'#8b949e'}} }
+  }
+});
+
+// Cross-RP Correlation
+new Chart(document.getElementById('crossRPChart'), {
+  type: 'line',
+  data: {
+    labels: ['19:48','19:49','19:50','19:51','19:52','19:53','19:54'],
+    datasets: [
+      { label: 'ARM VM PUT ✓', data: [1795,1645,829,502,207,16,3], borderColor:'#3fb950', tension:0.3, borderWidth:2.5, fill:false },
+      { label: 'ARM Disk PUT ✓', data: [3324,3299,4379,2556,1331,48,9], borderColor:'#58a6ff', tension:0.3, borderWidth:2.5, fill:false },
+      { label: 'ARM NIC PUT ✓ (CRP)', data: [736,1040,1474,1066,647,14,5], borderColor:'#bc8cff', tension:0.3, borderWidth:2.5, fill:false },
+      { label: 'CRP VM PUT', data: [314,3380,1917,1406,859,142,38], borderColor:'#f0883e', tension:0.3, borderWidth:2, borderDash:[5,5], fill:false },
+      { label: 'DiskRP PUT', data: [3324,3299,4379,2558,1329,48,9], borderColor:'#39d2c0', tension:0.3, borderWidth:2, borderDash:[3,3], fill:false },
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#c9d1d9',font:{size:11}}}},
+    scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Time (UTC)',color:'#8b949e'}},
+             y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Successful Operations',color:'#8b949e'}} }
+  }
+});
+
+// Throttle Distribution
+new Chart(document.getElementById('throttleChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['VM GET 429s (97,711)', 'Disk PUT 429s (19,132)', 'Disk GET 429s (15,511)', 'VM PUT 429s (10,310)', 'NIC GET 429s (6,284)', 'NIC PUT 429s (0)'],
+    datasets: [{
+      data: [97711, 19132, 15511, 10310, 6284, 0],
+      backgroundColor: ['rgba(248,81,73,0.8)','rgba(210,153,34,0.8)','rgba(210,153,34,0.5)','rgba(248,81,73,0.5)','rgba(188,140,255,0.5)','rgba(63,185,80,0.8)'],
+      borderColor: '#161b22', borderWidth: 2
+    }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right', labels:{color:'#c9d1d9',font:{size:11}} } }
+  }
+});
+</script>
+</body>
+</html>

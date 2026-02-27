@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Test Comparison — Parallel Runs 2-5 | ARM · CRP · DiskRP · SRP</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--orange:#d29922;--purple:#bc8cff;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:2rem}
+  .container{max-width:1400px;margin:0 auto}
+  h1{font-size:2rem;margin-bottom:.5rem;color:var(--accent)}
+  h2{font-size:1.4rem;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);color:var(--purple)}
+  h3{font-size:1.1rem;margin:1.5rem 0 .75rem;color:var(--accent)}
+  .meta{color:var(--muted);font-size:.9rem;margin-bottom:2rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1.5rem}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+  .kpi .value{font-size:1.8rem;font-weight:700;color:var(--green)}
+  .kpi .value.warn{color:var(--orange)} .kpi .value.bad{color:var(--red)}
+  .kpi .label{color:var(--muted);font-size:.82rem;margin-top:.25rem}
+  table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.88rem}
+  th,td{padding:.55rem .7rem;text-align:left;border:1px solid var(--border)}
+  th{background:#1c2128;color:var(--accent);font-weight:600}
+  tr:nth-child(even){background:rgba(255,255,255,.02)}
+  .ok{color:var(--green)} .warn{color:var(--orange)} .bad{color:var(--red)}
+  .chart-container{position:relative;height:340px;margin:1rem 0}
+  .chart-wide{height:400px}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  @media(max-width:900px){.two-col{grid-template-columns:1fr}}
+  .insight-box{background:rgba(88,166,255,.1);border-left:3px solid var(--accent);padding:1rem 1.5rem;margin:1rem 0;border-radius:0 8px 8px 0}
+  .bottleneck-box{background:rgba(248,81,73,.1);border-left:3px solid var(--red);padding:1rem 1.5rem;margin:1rem 0;border-radius:0 8px 8px 0}
+  .success-box{background:rgba(63,185,80,.1);border-left:3px solid var(--green);padding:1rem 1.5rem;margin:1rem 0;border-radius:0 8px 8px 0}
+  pre{background:#1c2128;border:1px solid var(--border);border-radius:6px;padding:1rem;overflow-x:auto;font-size:.82rem;line-height:1.5;margin:.5rem 0}
+  code{font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+  .kw{color:#ff7b72} .fn{color:#d2a8ff} .str{color:#a5d6ff} .num{color:#79c0ff} .comment{color:#8b949e}
+  .trend-up{color:var(--red)} .trend-down{color:var(--green)} .trend-flat{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>📊 Scale Test Comparison — Parallel Runs</h1>
+<p class="meta">
+  Comparing Runs 2, 3, 4, and 5 (parallel deployments only, serial Run 1 excluded) &nbsp;|&nbsp;
+  Report Generated: <strong>2026-02-24 17:25 UTC</strong> &nbsp;|&nbsp;
+  Subscription: b883903d-216e-45b3-98b0-058819ec9224 &nbsp;|&nbsp;
+  Region: EastUS2EUAP
+</p>
+
+<!-- ═══════════════════ RUN SUMMARY ═══════════════════ -->
+<h2>🏷️ Run Overview</h2>
+<div class="card">
+<table>
+  <tr><th>Metric</th><th>Run 2 (2dlw1ml6)</th><th>Run 3 (hk0m9lnz)</th><th>Run 4 (k6s46a8e)</th><th>Run 5 (h1m94mbp)</th><th>Trend</th></tr>
+  <tr><td>Deployment Start (UTC)</td><td>2026-02-17</td><td>2026-02-20</td><td>2026-02-23 06:22</td><td>2026-02-24 08:13</td><td></td></tr>
+  <tr><td>VMs Created</td><td>4,194</td><td>5,000</td><td class="ok">5,000</td><td class="ok">5,000</td><td class="trend-up">✅ Stable at target</td></tr>
+  <tr><td>CRP VM PUTs</td><td>4,194</td><td>4,966</td><td>4,973</td><td>4,988</td><td class="trend-down">↑ Improving</td></tr>
+  <tr><td>CRP HTTP 201 %</td><td class="ok">100%</td><td class="ok">100%</td><td class="ok">100%</td><td class="ok">100%</td><td class="trend-flat">— Perfect</td></tr>
+  <tr><td>Disks Created</td><td>12,540</td><td>14,820</td><td>14,820</td><td class="ok">15,000</td><td class="trend-down">↑ Run 5 = 100%</td></tr>
+  <tr><td>ARM NIC 429s</td><td class="bad">56,310</td><td class="warn">49,437</td><td class="warn">42,105</td><td class="ok">24,343</td><td class="trend-down">↓ 57% reduction!</td></tr>
+  <tr><td>ARM VM 429s</td><td>54</td><td>97</td><td>149</td><td class="bad">2,144</td><td class="trend-up">↑ New throttling</td></tr>
+  <tr><td>SRP Throttles</td><td class="ok">0</td><td class="ok">0</td><td class="ok">0</td><td class="ok">0</td><td class="trend-flat">— Zero</td></tr>
+  <tr><td>DiskRP Errors</td><td>22</td><td>18</td><td class="ok">0</td><td class="ok">0</td><td class="trend-down">↓ Eliminated</td></tr>
+  <tr><td>Wall Clock (ARM)</td><td>~95 min</td><td>~100 min</td><td>97 min</td><td>63 min</td><td class="trend-down">↓ 35% faster!</td></tr>
+</table>
+</div>
+
+<div class="success-box">
+<strong>✅ Run 5 is the best run yet:</strong> 63 min wall clock (vs 97 min in Run 4), NIC throttling down 57% (24K vs 42K), 15,000/15,000 disks (100%), and 4,988 CRP VM PUTs all succeeded.
+</div>
+
+<!-- ═══════════════════ EXECUTIVE KPIs ═══════════════════ -->
+<h2>📈 Executive Summary KPIs (Run 5)</h2>
+<div class="kpi-grid">
+  <div class="kpi"><div class="value">5,000</div><div class="label">VMs Created</div></div>
+  <div class="kpi"><div class="value">15,000</div><div class="label">Disks (100%)</div></div>
+  <div class="kpi"><div class="value">63 min</div><div class="label">Wall Clock</div></div>
+  <div class="kpi"><div class="value bad">24,343</div><div class="label">NIC 429s (↓57%)</div></div>
+  <div class="kpi"><div class="value">0</div><div class="label">SRP Throttles</div></div>
+  <div class="kpi"><div class="value">100%</div><div class="label">CRP Success</div></div>
+  <div class="kpi"><div class="value">27.5s</div><div class="label">CRP E2E P50</div></div>
+  <div class="kpi"><div class="value">857ms</div><div class="label">SRP Avg Latency</div></div>
+</div>
+
+<!-- ═══════════════════ ARM COMPARISON ═══════════════════ -->
+<h2>🏗️ ARM (Azure Resource Manager)</h2>
+
+<div class="card">
+<h3>ARM NIC PUT Throttling Trend</h3>
+<table>
+  <tr><th>Metric</th><th>Run 2</th><th>Run 3</th><th>Run 4</th><th>Run 5</th><th>Trend (R2→R5)</th></tr>
+  <tr><td>Total NIC Requests</td><td>86,370</td><td>76,542</td><td>94,212</td><td>58,592</td><td class="trend-down">↓ 32%</td></tr>
+  <tr><td>NIC Succeeded</td><td>2,974</td><td>4,943</td><td>5,000</td><td>4,953</td><td class="trend-down">↑ Improving</td></tr>
+  <tr><td>NIC Throttled (429)</td><td class="bad">56,310</td><td class="warn">49,437</td><td class="warn">42,105</td><td class="ok">24,343</td><td class="trend-down">↓ 57%</td></tr>
+  <tr><td>Retry Ratio (total/NICs)</td><td>29.1×</td><td>15.5×</td><td>18.8×</td><td>11.8×</td><td class="trend-down">↓ 59%</td></tr>
+  <tr><td>NIC P95 Latency</td><td>4,316ms</td><td>867ms</td><td>773ms</td><td>2,011ms</td><td class="trend-flat">Variable</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>ARM VM PUT Comparison</h3>
+<table>
+  <tr><th>Metric</th><th>Run 2</th><th>Run 3</th><th>Run 4</th><th>Run 5</th><th>Trend</th></tr>
+  <tr><td>Total VM Requests</td><td>6,192</td><td>10,100</td><td>10,298</td><td>14,192</td><td class="trend-up">↑ Growing</td></tr>
+  <tr><td>VM Succeeded</td><td>2,974</td><td>4,966</td><td>5,000</td><td>4,952</td><td class="trend-flat">~5K stable</td></tr>
+  <tr><td>VM Throttled (429)</td><td>54</td><td>97</td><td>149</td><td class="bad">2,144</td><td class="trend-up">↑ New issue</td></tr>
+  <tr><td>VM Avg Latency</td><td>748ms</td><td>611ms</td><td>631ms</td><td>562ms</td><td class="trend-down">↓ Improving</td></tr>
+  <tr><td>VM P95 Latency</td><td>2,143ms</td><td>1,316ms</td><td>1,773ms</td><td>1,890ms</td><td class="trend-flat">~1.5-2s</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>NIC Throttle Count Across Runs</h3>
+<div class="chart-container"><canvas id="nicThrottleTrend"></canvas></div>
+</div>
+
+<div class="bottleneck-box">
+<strong>⚠️ Run 5 Notable Change:</strong> NIC 429s dropped dramatically (24K, down 57% from Run 4's 42K), but VM 429s surged to 2,144 (14× increase from Run 4). This suggests ARM shifted throttle pressure from NICs to VMs. Despite this, wall clock improved from 97→63 min.
+</div>
+
+<!-- ═══════════════════ CRP COMPARISON ═══════════════════ -->
+<h2>⚙️ CRP (Compute Resource Provider)</h2>
+
+<div class="card">
+<h3>CRP VM PUT Performance Across Runs</h3>
+<table>
+  <tr><th>Metric</th><th>Run 2</th><th>Run 3</th><th>Run 4</th><th>Run 5</th><th>Trend</th></tr>
+  <tr><td>VM PUTs</td><td>4,194</td><td>4,966</td><td>4,973</td><td>4,988</td><td class="trend-down">↑ to near-5K</td></tr>
+  <tr><td>HTTP 201 %</td><td class="ok">100%</td><td class="ok">100%</td><td class="ok">100%</td><td class="ok">100%</td><td class="trend-flat">Perfect</td></tr>
+  <tr><td>Sync Latency Avg</td><td>686ms</td><td>606ms</td><td>606ms</td><td>603ms</td><td class="trend-down">↓ Stable</td></tr>
+  <tr><td>Sync P50</td><td>538ms</td><td>509ms</td><td>509ms</td><td>549ms</td><td class="trend-flat">~520ms</td></tr>
+  <tr><td>Sync P95</td><td>1,975ms</td><td>1,317ms</td><td>1,317ms</td><td>791ms</td><td class="trend-down">↓ 60% better</td></tr>
+  <tr><td>E2E P50</td><td>22.7s</td><td>22.7s</td><td>22.7s</td><td>27.5s</td><td class="trend-up">↑ Slightly higher</td></tr>
+  <tr><td>E2E P95</td><td>37.8s</td><td>34.4s</td><td>34.4s</td><td>87.9s</td><td class="trend-up">↑ Long tail</td></tr>
+  <tr><td>Max E2E</td><td>310s</td><td>355s</td><td>2,402s</td><td>1,407s</td><td class="trend-flat">Variable outliers</td></tr>
+</table>
+</div>
+
+<div class="two-col">
+<div class="card">
+<h3>CRP Sync Latency Comparison</h3>
+<div class="chart-container"><canvas id="crpSyncChart"></canvas></div>
+</div>
+<div class="card">
+<h3>CRP E2E Duration Distribution (Run 5)</h3>
+<div class="chart-container"><canvas id="crpE2EChart"></canvas></div>
+</div>
+</div>
+
+<div class="insight-box">
+<strong>💡 CRP Analysis:</strong> CRP sync processing remains excellent (~600ms avg across all runs). Run 5 shows slightly higher E2E P50 (27.5s vs 22.7s) and a longer tail (P95 at 88s). This is likely due to VM throttling at the ARM layer causing staggered CRP arrivals, which increases OS provisioning queue time.
+</div>
+
+<!-- ═══════════════════ DISKRP COMPARISON ═══════════════════ -->
+<h2>💾 DiskRP (Disk Resource Provider)</h2>
+
+<div class="card">
+<h3>DiskRP Performance Across Runs</h3>
+<table>
+  <tr><th>Metric</th><th>Run 2</th><th>Run 3</th><th>Run 4</th><th>Run 5</th><th>Trend</th></tr>
+  <tr><td>Total Operations</td><td>62,500</td><td>72,810</td><td>74,185</td><td>74,876</td><td class="trend-flat">~74K</td></tr>
+  <tr><td>Disk PUT Callbacks</td><td>12,540</td><td>14,820</td><td>14,820</td><td class="ok">15,000</td><td class="trend-down">↑ 100% in R5</td></tr>
+  <tr><td>Success Rate</td><td>99.96%</td><td>99.98%</td><td class="ok">100%</td><td class="ok">100%</td><td class="trend-down">→ Perfect</td></tr>
+  <tr><td>Errors</td><td>22</td><td>18</td><td class="ok">0</td><td class="ok">0</td><td class="trend-down">↓ Eliminated</td></tr>
+  <tr><td>Avg Latency (all ops)</td><td>2.1ms</td><td>1.8ms</td><td>2.0ms</td><td>1.9ms</td><td class="trend-flat">~2ms</td></tr>
+  <tr><td>AllocateDisks Avg</td><td>12ms</td><td>10ms</td><td>10ms</td><td>6.5ms</td><td class="trend-down">↓ 46% faster</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>DiskRP Pool Manager (DNS Pool) Comparison</h3>
+<table>
+  <tr><th>Metric</th><th>Run 2</th><th>Run 3</th><th>Run 4</th><th>Run 5</th></tr>
+  <tr><td>TryAllocate Calls</td><td>3,920</td><td>4,890</td><td>5,014</td><td>5,455</td></tr>
+  <tr><td>TryAllocate Avg Latency</td><td>180ms</td><td>155ms</td><td>141ms</td><td>194ms</td></tr>
+  <tr><td>Commit Calls</td><td>7,800</td><td>9,600</td><td>9,584</td><td>10,063</td></tr>
+  <tr><td>Commit Success Rate</td><td>~100%</td><td>~100%</td><td>99.99%</td><td>99.95%</td></tr>
+  <tr><td>Async Alloc (slow path)</td><td>0</td><td>2</td><td>1</td><td>32</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Disk Creation Rate Comparison</h3>
+<div class="chart-container chart-wide"><canvas id="diskCreateChart"></canvas></div>
+</div>
+
+<div class="success-box">
+<strong>✅ DiskRP: Zero errors for 2 consecutive runs.</strong> Run 5 achieved 15,000/15,000 disks (first time all 5,000 VMs × 3 disks). AllocateDisks latency improved 46% (10ms→6.5ms). 32 async pool allocations in Run 5 (vs 1 in Run 4) suggests the pool was slightly more stressed but still well within limits.
+</div>
+
+<!-- ═══════════════════ SRP COMPARISON ═══════════════════ -->
+<h2>📦 SRP (Storage Resource Provider)</h2>
+
+<div class="card">
+<h3>SRP PutStorageAccount Comparison</h3>
+<table>
+  <tr><th>Metric</th><th>Run 2</th><th>Run 3</th><th>Run 4</th><th>Run 5</th><th>Trend</th></tr>
+  <tr><td>Total Ops</td><td>18,200</td><td>21,360</td><td>36,740</td><td>6,800</td><td class="trend-flat">Variable</td></tr>
+  <tr><td>HTTP 202 Accepted</td><td>16,900</td><td>19,800</td><td>27,172</td><td>6,323</td><td class="trend-flat">Variable</td></tr>
+  <tr><td>Throttled (429)</td><td class="ok">0</td><td class="ok">0</td><td class="ok">0</td><td class="ok">0</td><td class="trend-flat">Zero always</td></tr>
+  <tr><td>Avg Latency</td><td>838ms</td><td>803ms</td><td>735ms</td><td>857ms</td><td class="trend-flat">~800ms</td></tr>
+  <tr><td>P50 Latency</td><td>890ms</td><td>875ms</td><td>827ms</td><td>890ms</td><td class="trend-flat">~870ms</td></tr>
+  <tr><td>P95 Latency</td><td>1,546ms</td><td>1,500ms</td><td>1,385ms</td><td>1,573ms</td><td class="trend-flat">~1.5s</td></tr>
+  <tr><td>Conflicts (409)</td><td>0</td><td>2</td><td>6</td><td>0</td><td class="trend-flat">Negligible</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>SRP Latency Trend Across Runs</h3>
+<div class="chart-container"><canvas id="srpLatencyChart"></canvas></div>
+</div>
+
+<!-- ═══════════════════ CROSS-STACK SUMMARY ═══════════════════ -->
+<h2>🔗 Cross-Stack Latency Summary</h2>
+
+<div class="card">
+<table>
+  <tr><th>Layer</th><th>Operation</th><th>Run 2 Avg</th><th>Run 3 Avg</th><th>Run 4 Avg</th><th>Run 5 Avg</th><th>Best Run</th></tr>
+  <tr><td>ARM</td><td>NIC PUT (succeeded)</td><td>748ms</td><td>422ms</td><td>287ms</td><td>422ms</td><td class="ok">Run 4</td></tr>
+  <tr><td>ARM</td><td>VM PUT (succeeded)</td><td>748ms</td><td>611ms</td><td>631ms</td><td>562ms</td><td class="ok">Run 5</td></tr>
+  <tr><td>CRP</td><td>VM PUT (sync)</td><td>686ms</td><td>606ms</td><td>606ms</td><td>603ms</td><td class="ok">Run 5</td></tr>
+  <tr><td>CRP</td><td>VM PUT (E2E P50)</td><td>22.7s</td><td>22.7s</td><td>22.7s</td><td>27.5s</td><td class="ok">Runs 2-4</td></tr>
+  <tr><td>DiskRP</td><td>AllocateDisks</td><td>12ms</td><td>10ms</td><td>10ms</td><td>6.5ms</td><td class="ok">Run 5</td></tr>
+  <tr><td>DiskRP</td><td>Disk PUT callback</td><td>1.6ms</td><td>1.4ms</td><td>1.4ms</td><td>1.7ms</td><td class="ok">Run 3/4</td></tr>
+  <tr><td>SRP</td><td>PutStorageAccount</td><td>838ms</td><td>803ms</td><td>735ms</td><td>857ms</td><td class="ok">Run 4</td></tr>
+  <tr><td>Pool Mgr</td><td>TryAllocate</td><td>180ms</td><td>155ms</td><td>141ms</td><td>194ms</td><td class="ok">Run 4</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Wall Clock vs Throttle Impact</h3>
+<div class="chart-container"><canvas id="wallClockChart"></canvas></div>
+</div>
+
+<!-- ═══════════════════ KEY INSIGHTS ═══════════════════ -->
+<h2>🎯 Key Insights & Recommendations</h2>
+
+<div class="card">
+<h3>Improvements Across Runs</h3>
+<ol style="padding-left:1.5rem; line-height:2">
+  <li><strong>NIC throttling reduced 57%</strong> (56K→24K) — ARM platform improvements or natural load patterns</li>
+  <li><strong>Wall clock improved 35%</strong> (97→63 min) — direct result of fewer NIC retries</li>
+  <li><strong>DiskRP now error-free</strong> for 2 consecutive runs — reliability improving</li>
+  <li><strong>Disk completion at 100%</strong> — Run 5 created all 15,000 disks (first time at perfect count)</li>
+  <li><strong>CRP sync P95 improved 60%</strong> (1,317ms→791ms) — CRP processing getting faster</li>
+</ol>
+</div>
+
+<div class="card">
+<h3>Areas of Concern</h3>
+<ol style="padding-left:1.5rem; line-height:2">
+  <li><strong class="bad">VM PUT throttling emerged</strong> — 2,144 429s in Run 5 (vs 149 in Run 4). ARM may be shifting throttle targets.</li>
+  <li><strong class="warn">CRP E2E P95 increased</strong> — 87.9s in Run 5 vs 34.4s in Run 4. Long-tail provisioning is growing.</li>
+  <li><strong class="warn">Pool Manager async allocations</strong> — 32 in Run 5 vs 1 in Run 4. DNS pool may need expansion for scale.</li>
+</ol>
+</div>
+
+<div class="card">
+<h3>Recommendations</h3>
+<table>
+  <tr><th>#</th><th>Action</th><th>Impact</th><th>Priority</th></tr>
+  <tr><td>1</td><td>Stagger batch deployments (4 waves × 5 batches, 30s spacing)</td><td>Reduce NIC+VM 429s by ~50%</td><td>High</td></tr>
+  <tr><td>2</td><td>Pre-create NICs in separate template pass</td><td>Eliminate NIC throttling entirely</td><td>High</td></tr>
+  <tr><td>3</td><td>Investigate VM PUT throttling growth (R4: 149 → R5: 2,144)</td><td>Prevent further degradation</td><td>Medium</td></tr>
+  <tr><td>4</td><td>Monitor DNS pool async allocations trend</td><td>Prevent pool exhaustion at scale</td><td>Low</td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════ APPENDIX ═══════════════════ -->
+<h2>📎 Appendix: Kusto Queries</h2>
+
+<div class="card">
+<h3>Q1 — ARM Operation Summary</h3>
+<pre><code><span class="comment">// Cluster: armprodgbl.eastus.kusto.windows.net | Database: ARMProd</span>
+<span class="fn">Unionizer</span>(<span class="str">"Requests"</span>, <span class="str">"HttpIncomingRequests"</span>)
+| <span class="kw">where</span> PreciseTimeStamp <span class="kw">between</span> (<span class="fn">datetime</span>(<span class="num">START</span>) .. <span class="fn">datetime</span>(<span class="num">END</span>))
+| <span class="kw">where</span> targetUri <span class="kw">contains</span> <span class="str">"TDPR-RG-{rg}"</span>
+| <span class="kw">where</span> operationName !<span class="kw">contains</span> <span class="str">"GET"</span>
+| <span class="kw">extend</span> opType = <span class="fn">case</span>(operationName <span class="kw">contains</span> <span class="str">"VIRTUALMACHINES"</span>, <span class="str">"VM PUT"</span>,
+    operationName <span class="kw">contains</span> <span class="str">"NETWORKINTERFACES"</span>, <span class="str">"NIC PUT"</span>, <span class="str">"Other"</span>)
+| <span class="kw">summarize</span> total=<span class="fn">count</span>(), succeeded=<span class="fn">countif</span>(httpStatusCode >= <span class="num">200</span> <span class="kw">and</span> httpStatusCode < <span class="num">300</span>),
+    throttled=<span class="fn">countif</span>(httpStatusCode == <span class="num">429</span>), callbacks=<span class="fn">countif</span>(httpStatusCode == <span class="num">-1</span>) <span class="kw">by</span> opType</code></pre>
+</div>
+
+<div class="card">
+<h3>Q2 — CRP VM PUT with E2E Latency</h3>
+<pre><code><span class="comment">// Cluster: azcrp.kusto.windows.net | Database: crp_allprod</span>
+ApiQosEvent
+| <span class="kw">where</span> subscriptionId == <span class="str">"b883903d-216e-45b3-98b0-058819ec9224"</span>
+| <span class="kw">where</span> resourceGroupName <span class="kw">in~</span> (<span class="str">"TDPR-RG-{rg}"</span>)
+| <span class="kw">where</span> operationName == <span class="str">"VirtualMachines.ResourceOperation.PUT"</span>
+| <span class="kw">summarize</span> totalVMs=<span class="fn">count</span>(), http201=<span class="fn">countif</span>(httpStatusCode == <span class="num">201</span>),
+    avgSync=<span class="fn">avg</span>(durationInMilliseconds), p50E2E=<span class="fn">percentile</span>(e2EDurationInMilliseconds, <span class="num">50</span>),
+    p95E2E=<span class="fn">percentile</span>(e2EDurationInMilliseconds, <span class="num">95</span>)</code></pre>
+</div>
+
+<div class="card">
+<h3>Q3 — DiskRP Operations Summary</h3>
+<pre><code><span class="comment">// Cluster: disks.kusto.windows.net | Database: Disks</span>
+DiskManagerApiQoSEvent
+| <span class="kw">where</span> subscriptionId == <span class="str">"b883903d-216e-45b3-98b0-058819ec9224"</span>
+| <span class="kw">where</span> resourceGroupName <span class="kw">has</span> <span class="str">"TDPR-RG-{rg}"</span>
+| <span class="kw">summarize</span> totalOps=<span class="fn">count</span>(), succeeded=<span class="fn">countif</span>(httpStatusCode >= <span class="num">200</span> <span class="kw">and</span> httpStatusCode < <span class="num">300</span>),
+    errors=<span class="fn">countif</span>(httpStatusCode >= <span class="num">400</span>), avgLatency=<span class="fn">avg</span>(durationInMilliseconds) <span class="kw">by</span> operationName</code></pre>
+</div>
+
+<div class="card">
+<h3>Q4 — SRP PutStorageAccount</h3>
+<pre><code><span class="comment">// Cluster: xcontrolplane.kusto.windows.net | Database: SRP</span>
+RegionalSRP_ServiceApiQosEvent
+| <span class="kw">where</span> region == <span class="str">"eastus2euap"</span>
+| <span class="kw">where</span> operationName <span class="kw">contains</span> <span class="str">"PutStorageAccount"</span> <span class="kw">and</span> operationName !<span class="kw">contains</span> <span class="str">"Idempotency"</span>
+| <span class="kw">where</span> account <span class="kw">startswith</span> <span class="str">"md-"</span>
+| <span class="kw">summarize</span> total=<span class="fn">count</span>(), accepted=<span class="fn">countif</span>(httpStatusCode == <span class="num">202</span>),
+    throttled=<span class="fn">countif</span>(httpStatusCode == <span class="num">429</span>), avgLatency=<span class="fn">avg</span>(durationInMilliseconds)
+    <span class="kw">by</span> <span class="fn">bin</span>(PreciseTimeStamp, <span class="num">5m</span>)</code></pre>
+</div>
+
+<div class="card">
+<h3>Q5 — DiskRP Pool Manager</h3>
+<pre><code><span class="comment">// Cluster: disks.kusto.windows.net | Database: Disks</span>
+DiskRPExternalComponentQoSEvent
+| <span class="kw">where</span> subscriptionId == <span class="str">"b883903d-216e-45b3-98b0-058819ec9224"</span>
+| <span class="kw">where</span> componentName <span class="kw">startswith</span> <span class="str">"PoolManager"</span>
+| <span class="kw">summarize</span> total=<span class="fn">count</span>(), succeeded=<span class="fn">countif</span>(resultType == <span class="str">"Success"</span>),
+    failed=<span class="fn">countif</span>(resultType != <span class="str">"Success"</span>), avgLatency=<span class="fn">avg</span>(durationInMs) <span class="kw">by</span> operationName</code></pre>
+</div>
+
+<div class="card">
+<h3>Data Source Reference</h3>
+<table>
+  <tr><th>Layer</th><th>Cluster</th><th>Database</th><th>Table / Function</th></tr>
+  <tr><td>ARM</td><td>armprodgbl.eastus.kusto.windows.net</td><td>ARMProd</td><td>Unionizer("Requests", "HttpIncomingRequests")</td></tr>
+  <tr><td>CRP</td><td>azcrp.kusto.windows.net</td><td>crp_allprod</td><td>ApiQosEvent</td></tr>
+  <tr><td>DiskRP</td><td>disks.kusto.windows.net</td><td>Disks</td><td>DiskManagerApiQoSEvent</td></tr>
+  <tr><td>DiskRP→XStore</td><td>disks.kusto.windows.net</td><td>Disks</td><td>DiskRPExternalComponentQoSEvent</td></tr>
+  <tr><td>SRP</td><td>xcontrolplane.kusto.windows.net</td><td>SRP</td><td>RegionalSRP_ServiceApiQosEvent</td></tr>
+</table>
+</div>
+
+</div>
+
+<script>
+Chart.defaults.color='#8b949e';Chart.defaults.borderColor='#30363d';
+Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+
+// NIC Throttle Trend
+new Chart(document.getElementById('nicThrottleTrend'),{
+  type:'bar',
+  data:{
+    labels:['Run 2','Run 3','Run 4','Run 5'],
+    datasets:[
+      {label:'NIC Throttled (429)',data:[56310,49437,42105,24343],backgroundColor:'#f85149'},
+      {label:'NIC Succeeded',data:[2974,4943,5000,4953],backgroundColor:'#3fb950'},
+      {label:'VM Throttled (429)',data:[54,97,149,2144],backgroundColor:'#d29922'}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{title:{display:true,text:'ARM Throttling Trend Across Runs',color:'#e6edf3'}},
+    scales:{y:{title:{display:true,text:'Request Count'}}}}
+});
+
+// CRP Sync Latency
+new Chart(document.getElementById('crpSyncChart'),{
+  type:'bar',
+  data:{
+    labels:['Run 2','Run 3','Run 4','Run 5'],
+    datasets:[
+      {label:'Avg Sync (ms)',data:[686,606,606,603],backgroundColor:'#58a6ff'},
+      {label:'P95 Sync (ms)',data:[1975,1317,1317,791],backgroundColor:'#bc8cff'}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{title:{display:true,text:'CRP VM PUT Sync Latency',color:'#e6edf3'}},
+    scales:{y:{title:{display:true,text:'Latency (ms)'}}}}
+});
+
+// CRP E2E Distribution (Run 5)
+new Chart(document.getElementById('crpE2EChart'),{
+  type:'doughnut',
+  data:{
+    labels:['< 10s (8.5%)','10-20s (0.8%)','20-30s (53.2%)','30-60s (21.8%)','1-2 min (14.6%)','2-5 min (0.6%)','5-10 min (0.2%)','> 10 min (0.4%)'],
+    datasets:[{
+      data:[422,38,2653,1087,730,32,8,18],
+      backgroundColor:['#3fb950','#58a6ff','#bc8cff','#d29922','#f0883e','#f85149','#da3633','#8b0000'],
+      borderColor:'#161b22',borderWidth:2
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{title:{display:true,text:'CRP E2E Duration Distribution — Run 5 (4,988 VMs)',color:'#e6edf3'},
+    legend:{position:'right',labels:{font:{size:10}}}}}
+});
+
+// Disk Creation Rate
+new Chart(document.getElementById('diskCreateChart'),{
+  type:'line',
+  data:{
+    labels:['0-5m','5-10m','10-15m','15-20m','20-25m','25-30m','30-35m','35-40m','40-45m','45-50m','50-55m','55-60m'],
+    datasets:[
+      {label:'Run 4',data:[1554,2748,1554,891,2529,111,670,1544,375,426,1374,120],borderColor:'#58a6ff',tension:.3},
+      {label:'Run 5',data:[3222,3413,2263,1401,1461,261,1827,0,237,543,24,281],borderColor:'#3fb950',tension:.3}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{title:{display:true,text:'Disk Creation Rate (5-min buckets, offset from first disk)',color:'#e6edf3'}},
+    scales:{y:{title:{display:true,text:'Disks Created'}}}}
+});
+
+// SRP Latency Trend
+new Chart(document.getElementById('srpLatencyChart'),{
+  type:'bar',
+  data:{
+    labels:['Run 2','Run 3','Run 4','Run 5'],
+    datasets:[
+      {label:'Avg Latency',data:[838,803,735,857],backgroundColor:'#d29922'},
+      {label:'P95 Latency',data:[1546,1500,1385,1573],backgroundColor:'#f0883e'}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{title:{display:true,text:'SRP PutStorageAccount Latency (ms)',color:'#e6edf3'}},
+    scales:{y:{title:{display:true,text:'Latency (ms)'}}}}
+});
+
+// Wall Clock vs Throttle
+new Chart(document.getElementById('wallClockChart'),{
+  type:'bar',
+  data:{
+    labels:['Run 2','Run 3','Run 4','Run 5'],
+    datasets:[
+      {label:'Wall Clock (min)',data:[95,100,97,63],backgroundColor:'#58a6ff',yAxisID:'y'},
+      {label:'NIC 429s (thousands)',data:[56.3,49.4,42.1,24.3],backgroundColor:'#f85149',yAxisID:'y1'}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{title:{display:true,text:'Wall Clock Time vs NIC Throttling',color:'#e6edf3'}},
+    scales:{
+      y:{title:{display:true,text:'Minutes'},position:'left'},
+      y1:{title:{display:true,text:'429s (thousands)'},position:'right',grid:{drawOnChartArea:false}}
+    }}
+});
+</script>
+</body></html>

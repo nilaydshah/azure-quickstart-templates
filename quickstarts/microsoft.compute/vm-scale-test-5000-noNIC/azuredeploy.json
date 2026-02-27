@@ -1,0 +1,100 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "defaultValue": "scale-test-vnet",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "defaultValue": "vm-subnet",
+            "metadata": {
+                "description": "Name of the subnet for VMs."
+            }
+        },
+        "networkSecurityGroupName": {
+            "type": "string",
+            "defaultValue": "scale-test-nsg",
+            "metadata": {
+                "description": "Name of the network security group."
+            }
+        }
+    },
+    "variables": {
+        "addressPrefix": "10.0.0.0/12",
+        "subnetPrefix": "10.0.0.0/19"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2023-11-01",
+            "name": "[parameters('networkSecurityGroupName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "Allow-SSH",
+                        "properties": {
+                            "priority": 1000,
+                            "protocol": "Tcp",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "22"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-11-01",
+            "name": "[parameters('virtualNetworkName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetPrefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "subnetResourceId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "value": "[parameters('virtualNetworkName')]"
+        }
+    }
+}

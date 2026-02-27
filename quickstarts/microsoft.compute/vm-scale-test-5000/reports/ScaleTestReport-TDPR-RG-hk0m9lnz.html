@@ -1,0 +1,424 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Test Report - TDPR-RG-hk0m9lnz (Run 3)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<style>
+:root { --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; --heading: #f0f6fc; --accent: #58a6ff; --green: #3fb950; --red: #f85149; --yellow: #d29922; --purple: #bc8cff; --orange: #f0883e; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 20px; }
+.container { max-width: 1400px; margin: 0 auto; }
+h1 { color: var(--heading); font-size: 28px; margin-bottom: 5px; }
+h2 { color: var(--accent); font-size: 20px; margin: 30px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { color: var(--heading); font-size: 16px; margin: 15px 0 10px; }
+.subtitle { color: var(--text); font-size: 14px; margin-bottom: 20px; opacity: 0.7; }
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.stat-card { text-align: center; }
+.stat-value { font-size: 36px; font-weight: 700; color: var(--heading); }
+.stat-label { font-size: 12px; color: var(--text); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-sub { font-size: 11px; color: var(--accent); margin-top: 2px; }
+.green { color: var(--green) !important; }
+.red { color: var(--red) !important; }
+.yellow { color: var(--yellow) !important; }
+.purple { color: var(--purple) !important; }
+.orange { color: var(--orange) !important; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #1c2128; color: var(--heading); padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+tr:hover { background: #1c2128; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.badge-red { background: rgba(248,81,73,0.15); color: var(--red); }
+.badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.chart-container { position: relative; height: 300px; }
+.callout { border-left: 3px solid var(--accent); padding: 12px 16px; background: rgba(88,166,255,0.05); margin: 10px 0; border-radius: 0 6px 6px 0; }
+.callout-warn { border-left-color: var(--yellow); background: rgba(210,153,34,0.05); }
+.callout-ok { border-left-color: var(--green); background: rgba(63,185,80,0.05); }
+.comparison-row { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
+.comparison-bar { height: 20px; border-radius: 4px; min-width: 4px; }
+.flow-diagram { font-family: 'Courier New', monospace; font-size: 12px; background: #1c2128; padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre; line-height: 1.6; }
+@media (max-width: 900px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🚀 Azure Scale Test Report — Run 3</h1>
+<p class="subtitle">Resource Group: TDPR-RG-hk0m9lnz | Deployment Start: 2026-02-22 14:39 UTC | Region: EastUS2EUAP | Generated: 2026-02-23 02:20 UTC</p>
+
+<!-- KEY METRICS -->
+<div class="grid grid-4" style="margin-bottom:20px">
+<div class="card stat-card">
+  <div class="stat-value green">4,616</div>
+  <div class="stat-label">VMs Created</div>
+  <div class="stat-sub">92.3% of 5,000 target</div>
+</div>
+<div class="card stat-card">
+  <div class="stat-value">9,232</div>
+  <div class="stat-label">vCPUs Consumed</div>
+  <div class="stat-sub">of 10,000 DDSv5 quota</div>
+</div>
+<div class="card stat-card">
+  <div class="stat-value yellow">20 / 20</div>
+  <div class="stat-label">Batches "Failed"</div>
+  <div class="stat-sub">OSProvisioningTimedOut</div>
+</div>
+<div class="card stat-card">
+  <div class="stat-value">~2h 49m</div>
+  <div class="stat-label">Total Duration</div>
+  <div class="stat-sub">14:39 → 17:28 UTC</div>
+</div>
+</div>
+
+<!-- 3-RUN COMPARISON -->
+<h2>📊 3-Run Comparison: Serial → Parallel → Run 3</h2>
+<div class="grid grid-3">
+<div class="card">
+  <h3>Run 1 (Serial) — sdkhgv11</h3>
+  <table>
+    <tr><td>Started</td><td><strong>2026-02-20 01:35 UTC</strong></td></tr>
+    <tr><td>Copy Mode</td><td><span class="badge badge-yellow">Serial</span></td></tr>
+    <tr><td>VMs Created</td><td><strong>3,856</strong></td></tr>
+    <tr><td>VMs Succeeded</td><td><strong>3,849</strong> (99.8%)</td></tr>
+    <tr><td>Peak PUT/2min</td><td><strong>395</strong></td></tr>
+    <tr><td>CRP E2E P50</td><td><strong>9,106ms</strong></td></tr>
+    <tr><td>DiskRP Success</td><td><span class="green">100%</span></td></tr>
+  </table>
+</div>
+<div class="card">
+  <h3>Run 2 (Parallel) — 2dlw1ml6</h3>
+  <table>
+    <tr><td>Started</td><td><strong>2026-02-21 01:37 UTC</strong></td></tr>
+    <tr><td>Copy Mode</td><td><span class="badge badge-green">Parallel</span></td></tr>
+    <tr><td>VMs Created</td><td><strong>4,219</strong> <span class="green">+9.4%</span></td></tr>
+    <tr><td>VMs Succeeded</td><td><strong>4,207</strong> (99.7%)</td></tr>
+    <tr><td>Peak PUT/2min</td><td><strong>687</strong> <span class="green">+74%</span></td></tr>
+    <tr><td>CRP E2E P50</td><td><strong>21,986ms</strong> <span class="red">+141%</span></td></tr>
+    <tr><td>DiskRP Success</td><td><span class="green">100%</span></td></tr>
+  </table>
+</div>
+<div class="card" style="border-color: var(--accent);">
+  <h3>Run 3 (Parallel) — hk0m9lnz ⭐</h3>
+  <table>
+    <tr><td>Started</td><td><strong>2026-02-22 14:39 UTC</strong></td></tr>
+    <tr><td>Copy Mode</td><td><span class="badge badge-green">Parallel</span></td></tr>
+    <tr><td>VMs Created</td><td><strong>4,616</strong> <span class="green">+9.4%</span></td></tr>
+    <tr><td>Quota Used</td><td><strong>9,232 / 10,000</strong> vCPUs</td></tr>
+    <tr><td>Duration</td><td><strong>~2h 49m</strong></td></tr>
+    <tr><td>Batches Failed</td><td><strong>20/20</strong> <span class="yellow">(OSProv)</span></td></tr>
+    <tr><td>DiskRP Success</td><td><span class="green">100%</span></td></tr>
+  </table>
+</div>
+</div>
+
+<!-- VM CREATION TIMELINE CHART -->
+<h2>📈 VM Creation Timeline</h2>
+<div class="card">
+  <div class="chart-container" style="height:350px">
+    <canvas id="vmTimelineChart"></canvas>
+  </div>
+</div>
+
+<!-- CROSS-LAYER CALL FLOW -->
+<h2>🔗 Cross-Layer Call Flow: ARM → CRP → DiskRP → XStore</h2>
+<div class="card">
+<div class="flow-diagram">
+Client (Deploy-ScaleTest.ps1)  ─── 20 parallel ARM batch deployments ───→
+  │
+  └─→ <span class="yellow">ARM</span> (VM PUT × 5000 requested)
+        │    ⚠ ARM telemetry not yet ingested (data lag in armprodgbl for this RG)
+        │
+        └─→ <span class="green">CRP</span> (DiskRPCallback.AllocateDisks)  ─── 4,602 requests ─── <span class="green">100% success</span>
+              │    P50: 0ms  |  P90: 7ms  |  P99: 10ms
+              │
+              └─→ <span class="green">DiskRP</span> (DiskManagerApiQoS)
+                    │
+                    ├── AllocateDisks ────── 4,616 requests ─── <span class="green">100% success</span> ─── P50: 15ms, P99: 31ms
+                    ├── ValidateAndProtect ── 4,616 requests ─── <span class="green">100% success</span> ─── P50: 0ms,  P99: 15ms
+                    ├── Callback PUT ──────── 13,848 requests ── <span class="green">100% success</span> ─── P50: 0ms,  P99: 15ms
+                    ├── GET (status) ──────── 41,591 requests ── <span class="green">100% success</span> ─── P50: 0ms,  P99: 15ms
+                    │
+                    └─→ <span class="purple">XStore</span> (External Component)
+                          │
+                          ├── GetContainerRef ────── 422,049 ── <span class="green">99.9%</span> ─── P50: 0ms,  P99: 32ms
+                          ├── FetchInternalProps ──── 161,147 ── <span class="yellow">94.4%</span> ─── P50: 13ms, P99: 211ms
+                          ├── ListContainerBlobs ──── 114,082 ── <span class="yellow">96.6%</span> ─── P50: 11ms, P99: 157ms
+                          ├── DeleteCorLink ────────── 103,298 ── <span class="yellow">92.7%</span> ─── P50: 29ms, P99: 1,204ms
+                          ├── DeleteContainer ──────── 100,102 ── <span class="yellow">97.8%</span> ─── P50: 18ms, P99: 184ms
+                          ├── GetBlobRefWithAttrs ──── 91,392 ── <span class="green">100%</span>  ─── P50: 14ms, P99: 36ms
+                          ├── SetInternalProps ──────── 82,546 ── <span class="green">100%</span>  ─── P50: 9ms,  P99: 30ms
+                          ├── CreateContainerIfNot ──── 80,969 ── <span class="green">100%</span>  ─── P50: 15ms, P99: 45ms
+                          ├── WritePagesAsync ────────── 55,005 ── <span class="green">100%</span>  ─── P50: 5ms,  P99: 30ms
+                          ├── CreateAsync ──────────── 28,528 ── <span class="green">100%</span>  ─── P50: 14ms, P99: 41ms
+                          ├── StartCopyAsync.Link ──── 26,477 ── <span class="green">100%</span>  ─── P50: 53ms, P99: 3,048ms
+                          └── GetStorageAccountKeys ── 15,616 ── <span class="yellow">98.1%</span> ─── P50: 19ms, P99: 232ms
+</div>
+</div>
+
+<!-- DISKRP DETAIL -->
+<h2>💿 DiskRP Performance — 100% Success</h2>
+<div class="grid grid-2">
+<div class="card">
+  <h3>DiskRP API Operations</h3>
+  <table>
+    <tr><th>Operation</th><th>Count</th><th>Success</th><th>P50</th><th>P99</th><th>Avg</th></tr>
+    <tr><td>AllocateDisks</td><td>4,616</td><td><span class="green">100%</span></td><td>15ms</td><td>31ms</td><td>13.7ms</td></tr>
+    <tr><td>ValidateAndProtect</td><td>4,616</td><td><span class="green">100%</span></td><td>0ms</td><td>15ms</td><td>3.4ms</td></tr>
+    <tr><td>Callback PUT</td><td>13,848</td><td><span class="green">100%</span></td><td>0ms</td><td>15ms</td><td>1.4ms</td></tr>
+    <tr><td>GET (status)</td><td>41,591</td><td><span class="green">100%</span></td><td>0ms</td><td>15ms</td><td>1.4ms</td></tr>
+    <tr><td>AsyncCompletion</td><td>4,616</td><td><span class="green">100%</span></td><td>0ms</td><td>15ms</td><td>0.2ms</td></tr>
+  </table>
+  <div class="callout callout-ok" style="margin-top:12px">
+    <strong>✅ DiskRP is rock solid.</strong> Zero failures across 69,287 operations. P99 latency at 31ms even under 4,616-VM burst.
+  </div>
+</div>
+<div class="card">
+  <div class="chart-container">
+    <canvas id="diskrpChart"></canvas>
+  </div>
+</div>
+</div>
+
+<!-- XSTORE DETAIL -->
+<h2>☁️ XStore Performance — 1.5M+ Operations</h2>
+<div class="card">
+  <table>
+    <tr><th>Component</th><th>Operation</th><th>Total</th><th>Success Rate</th><th>P50</th><th>P90</th><th>P99</th><th>Avg</th></tr>
+    <tr><td>XStore</td><td>GetContainerReference</td><td>422,049</td><td><span class="green">99.9%</span></td><td>0ms</td><td>0ms</td><td>32ms</td><td>1.7ms</td></tr>
+    <tr><td>XStoreBlob</td><td>FetchInternalProperties</td><td>161,147</td><td><span class="yellow">94.4%</span></td><td>13ms</td><td>57ms</td><td>211ms</td><td>24.4ms</td></tr>
+    <tr><td>XStoreBlob</td><td>ListContainerBlobs</td><td>114,082</td><td><span class="yellow">96.6%</span></td><td>11ms</td><td>45ms</td><td>157ms</td><td>17.9ms</td></tr>
+    <tr><td>XStoreBlob</td><td>DeleteCorLink</td><td>103,298</td><td><span class="yellow">92.7%</span></td><td>29ms</td><td>140ms</td><td>1,204ms</td><td>119.2ms</td></tr>
+    <tr><td>XStore</td><td>DeleteContainerIfExists</td><td>100,102</td><td><span class="yellow">97.8%</span></td><td>18ms</td><td>71ms</td><td>184ms</td><td>32.2ms</td></tr>
+    <tr><td>XStore</td><td>GetBlobRefWithAttributes</td><td>91,392</td><td><span class="green">100%</span></td><td>14ms</td><td>17ms</td><td>36ms</td><td>13.0ms</td></tr>
+    <tr><td>XStoreBlob</td><td>SetInternalProperties</td><td>82,546</td><td><span class="green">100%</span></td><td>9ms</td><td>18ms</td><td>30ms</td><td>10.3ms</td></tr>
+    <tr><td>XStore</td><td>CreateContainerIfNotExists</td><td>80,969</td><td><span class="green">100%</span></td><td>15ms</td><td>21ms</td><td>45ms</td><td>14.7ms</td></tr>
+    <tr><td>XStore</td><td>WritePagesAsync</td><td>55,005</td><td><span class="green">100%</span></td><td>5ms</td><td>16ms</td><td>30ms</td><td>9.2ms</td></tr>
+    <tr><td>XStore</td><td>CreateAsync</td><td>28,528</td><td><span class="green">100%</span></td><td>14ms</td><td>18ms</td><td>41ms</td><td>14.2ms</td></tr>
+    <tr><td>XStoreBlob</td><td>StartCopyAsync.Link</td><td>26,477</td><td><span class="green">100%</span></td><td>53ms</td><td>398ms</td><td>3,048ms</td><td>194.6ms</td></tr>
+    <tr><td>XStore</td><td>GetStorageAccountKeys</td><td>15,616</td><td><span class="yellow">98.1%</span></td><td>19ms</td><td>40ms</td><td>232ms</td><td>28.6ms</td></tr>
+    <tr><td>XStoreBlob</td><td>StartCopyAsync.CopyOnRead</td><td>13,490</td><td><span class="green">100%</span></td><td>40ms</td><td>183ms</td><td>1,063ms</td><td>104.3ms</td></tr>
+    <tr><td>XStoreBlob</td><td>StartCopyAsync.Sync</td><td>12,474</td><td><span class="green">100%</span></td><td>50ms</td><td>224ms</td><td>1,074ms</td><td>118.1ms</td></tr>
+  </table>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+  <div class="chart-container">
+    <canvas id="xstoreSuccessChart"></canvas>
+  </div>
+</div>
+<div class="card">
+  <div class="chart-container">
+    <canvas id="xstoreLatencyChart"></canvas>
+  </div>
+</div>
+</div>
+
+<!-- SRP TELEMETRY -->
+<h2>🏗️ SRP Storage Account Creation</h2>
+<div class="grid grid-2">
+<div class="card">
+  <h3>DNS Pool Hit Rate</h3>
+  <table>
+    <tr><th>Path</th><th>Hit Rate</th><th>Hits</th><th>Misses</th><th>Throttled</th></tr>
+    <tr><td>Pooled (IdempotencyKey)</td><td><span class="green">100%</span></td><td>~2,115</td><td>0</td><td>0</td></tr>
+    <tr><td>Direct (no IdempotencyKey)</td><td><span class="red">0%</span></td><td>0</td><td>~8,550</td><td>0</td></tr>
+  </table>
+  <div class="callout callout-warn" style="margin-top:12px">
+    <strong>⚠️ DNS Pool Bypass:</strong> ~8,550 CreateStorageAccount calls bypass the pre-provisioned DNS pool (no IdempotencyKey). Each triggers ~17s async provisioning. Pooled path has 100% hit rate.
+  </div>
+</div>
+<div class="card">
+  <h3>SRP PutStorageAccount (Regional)</h3>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total PutSA calls</td><td>~25,541 (14:00-18:30 window)</td></tr>
+    <tr><td>HTTP 202 (Accepted)</td><td>~20,075</td></tr>
+    <tr><td>HTTP 200 (OK/Cached)</td><td>~1,714</td></tr>
+    <tr><td>HTTP 429 (Throttled)</td><td><span class="green">0</span></td></tr>
+    <tr><td>HTTP 503 (Unavailable)</td><td><span class="green">0</span></td></tr>
+  </table>
+  <div class="callout callout-ok" style="margin-top:12px">
+    <strong>✅ Zero SRP throttling.</strong> No 429 or 503 errors during the scale test. Our load blends into regional baseline (~6K PutSA/hr).
+  </div>
+</div>
+</div>
+
+<!-- PIPELINE BLOCK ANALYSIS -->
+<h2>🔧 DiskRP Pipeline Block Analysis</h2>
+<div class="card">
+  <table>
+    <tr><th>Pipeline Block</th><th>Count</th><th>Success</th><th>P50</th><th>P90</th><th>P99</th><th>Note</th></tr>
+    <tr><td>PipelineSetup</td><td>163,159</td><td><span class="green">100%</span></td><td>2ms</td><td>4ms</td><td>34ms</td><td>Initial setup</td></tr>
+    <tr><td>ArmRegistration</td><td>136,015</td><td><span class="green">100%</span></td><td>42ms</td><td>326ms</td><td>590ms</td><td>ARM callback registration</td></tr>
+    <tr><td>ReassignPreprovisioned</td><td>134,780</td><td><span class="green">100%</span></td><td>0ms</td><td>318ms</td><td>422ms</td><td>Pre-provisioned disk reassignment</td></tr>
+    <tr><td>StorageAccountAllocator</td><td>134,721</td><td><span class="green">100%</span></td><td>1ms</td><td>16ms</td><td>543ms</td><td>SA allocation for disk</td></tr>
+    <tr><td>ManagedImageResolver</td><td>134,737</td><td><span class="green">100%</span></td><td>0ms</td><td>17ms</td><td>43ms</td><td>Image resolution</td></tr>
+    <tr><td>EntityCreator</td><td>134,671</td><td><span class="green">100%</span></td><td>20ms</td><td>55ms</td><td>163ms</td><td>Disk entity creation</td></tr>
+    <tr><td>DiskDeletion</td><td>151,995</td><td><span class="yellow">92.1%</span></td><td>0ms</td><td>412ms</td><td>1,738ms</td><td>Cleanup (12,014 failures)</td></tr>
+    <tr><td>PendingBlobsCleanup</td><td>152,299</td><td><span class="green">100%</span></td><td>0ms</td><td>0ms</td><td>0ms</td><td>Blob cleanup</td></tr>
+    <tr><td>LeaseCleanup</td><td>152,277</td><td><span class="green">100%</span></td><td>0ms</td><td>0ms</td><td>1ms</td><td>Lease cleanup</td></tr>
+  </table>
+  <div class="callout" style="margin-top:12px">
+    <strong>🔍 DiskDeletion block has 12,014 failures (7.9%)</strong> — these are from cleanup/background operations during scale-down of the old TDPR-RG-2dlw1ml6 which was being deleted concurrently. Not related to Run 3 VM creation.
+  </div>
+</div>
+
+<!-- FAILURE ANALYSIS -->
+<h2>⚠️ Failure Analysis</h2>
+<div class="card">
+  <h3>Why all 20 batches show "Failed"</h3>
+  <div class="callout callout-warn">
+    <p><strong>Root Cause: OSProvisioningTimedOut</strong></p>
+    <p style="margin-top:8px">ARM template deployments fail if <em>any</em> VM in the batch experiences OSProvisioningTimedOut (>20 min for guest agent to report ready). Even though 4,600+ VMs succeeded, a few slow VMs per batch cause the entire 250-VM batch deployment to be marked as "Failed".</p>
+    <p style="margin-top:8px"><strong>Impact:</strong> 384 VMs missing (5,000 - 4,616 = 384 VMs, 7.7%). These VMs either hit quota limits or OSProvisioningTimedOut before creation.</p>
+  </div>
+  <h3 style="margin-top:16px">Key Observations</h3>
+  <ul style="padding-left:20px; line-height:1.8">
+    <li>DiskRP: <strong>Zero failures</strong> across 69,287 operations — disk allocation is not the bottleneck</li>
+    <li>XStore creation ops (CreateContainer, CreateAsync, WritePagesAsync): <strong>100% success</strong> — storage layer is healthy</li>
+    <li>XStore cleanup ops (DeleteCorLink, DeleteContainer): <strong>92-98% success</strong> — cleanup path has retries, not blocking</li>
+    <li>SRP: <strong>Zero throttling</strong> — no 429 or 503 errors during the test</li>
+    <li>Peak XStore load: <strong>~325 ops/VM</strong> (1.5M total / 4,616 VMs) — higher than Run 2's 185 ops/VM</li>
+  </ul>
+</div>
+
+<!-- ACTION ITEMS -->
+<h2>📋 Action Items & Recommendations</h2>
+<div class="grid grid-2">
+<div class="card">
+  <h3>🔴 Critical</h3>
+  <ol style="padding-left:20px; line-height:1.8">
+    <li><strong>Investigate missing 384 VMs</strong> — Determine if OperationNotAllowed (quota) or OSProvisioningTimedOut was the cause for each undeployed VM</li>
+    <li><strong>XStore FetchInternalProperties 5.6% failure</strong> — 9,049 failures (was 3.5% in Run 1). Regression under higher load? Check if these are transient 404s vs actual errors</li>
+    <li><strong>XStore DeleteCorLink 7.3% failure</strong> — 7,495 failures with P99 of 1.2s. Check if CorLink cleanup queue is overloaded</li>
+  </ol>
+</div>
+<div class="card">
+  <h3>🟡 Improvements</h3>
+  <ol style="padding-left:20px; line-height:1.8">
+    <li><strong>DNS Pool bypass</strong> — 80% of CreateSA calls bypass the pool. Consider expanding IdempotencyKey coverage for PremiumV2_LRS</li>
+    <li><strong>ARM template error handling</strong> — Change deployment mode to continue on individual VM failures instead of failing the batch</li>
+    <li><strong>Reduce batch size to 100-150</strong> — Smaller batches reduce blast radius of OSProvisioningTimedOut</li>
+    <li><strong>Add VM provisioning timeout extension</strong> — Consider increasing OS provisioning timeout from 20min to 30min for scale scenarios</li>
+  </ol>
+</div>
+</div>
+
+</div>
+
+<script>
+// VM Creation Timeline Chart
+new Chart(document.getElementById('vmTimelineChart'), {
+  type: 'line',
+  data: {
+    labels: ['14:39','14:49','14:53','15:02','15:08','15:14','15:20','15:25','15:30','15:35','15:40','15:45','15:51','15:56','16:01','16:06','16:11','16:17','16:22','16:27','16:32','16:37','16:42','16:47','16:54','16:59','17:04','17:09','17:14','17:28'],
+    datasets: [{
+      label: 'VMs Created',
+      data: [0,1481,1733,2149,2149,2191,2611,2621,2621,2789,3017,3017,3023,3539,3719,3719,3725,3902,3932,3932,4029,4252,4254,4255,4441,4446,4446,4462,4601,4616],
+      borderColor: '#58a6ff',
+      backgroundColor: 'rgba(88,166,255,0.1)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 2
+    },{
+      label: 'Run 2 (2dlw1ml6)',
+      data: [0,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,4219],
+      borderColor: '#3fb950',
+      borderDash: [5,5],
+      pointRadius: 6,
+      pointStyle: 'triangle'
+    },{
+      label: 'Run 1 (sdkhgv11)',
+      data: [0,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,3856],
+      borderColor: '#d29922',
+      borderDash: [5,5],
+      pointRadius: 6,
+      pointStyle: 'triangle'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#c9d1d9' } }, title: { display: true, text: 'VM Creation Over Time (UTC)', color: '#f0f6fc' } },
+    scales: {
+      x: { ticks: { color: '#8b949e', maxRotation: 45 }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, title: { display: true, text: 'VMs', color: '#8b949e' } }
+    }
+  }
+});
+
+// DiskRP Operations Chart
+new Chart(document.getElementById('diskrpChart'), {
+  type: 'bar',
+  data: {
+    labels: ['AllocateDisks','ValidateProtect','Callback PUT','GET Status','AsyncComplete'],
+    datasets: [{
+      label: 'Requests',
+      data: [4616, 4616, 13848, 41591, 4616],
+      backgroundColor: ['#58a6ff','#3fb950','#bc8cff','#f0883e','#d29922']
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, title: { display: true, text: 'DiskRP Operation Counts', color: '#f0f6fc' } },
+    scales: {
+      x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, type: 'logarithmic' }
+    }
+  }
+});
+
+// XStore Success Rate Chart
+new Chart(document.getElementById('xstoreSuccessChart'), {
+  type: 'bar',
+  data: {
+    labels: ['GetContainerRef','FetchIntProps','ListBlobs','DeleteCorLink','DeleteContainer','GetBlobRef','SetIntProps','CreateContainer','WritePages','CreateAsync','StartCopy.Link','GetSAKeys'],
+    datasets: [{
+      label: 'Success Rate %',
+      data: [99.9, 94.4, 96.6, 92.7, 97.8, 100, 100, 100, 100, 100, 100, 98.1],
+      backgroundColor: function(ctx) { return ctx.raw >= 99 ? '#3fb950' : ctx.raw >= 95 ? '#d29922' : '#f85149'; }
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, title: { display: true, text: 'XStore Operation Success Rates', color: '#f0f6fc' } },
+    scales: {
+      x: { ticks: { color: '#8b949e', maxRotation: 45, font: { size: 10 } }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, min: 85, max: 101 }
+    }
+  }
+});
+
+// XStore Latency Chart
+new Chart(document.getElementById('xstoreLatencyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['GetContainerRef','FetchIntProps','DeleteCorLink','DeleteContainer','GetBlobRef','SetIntProps','CreateContainer','WritePages','CreateAsync','StartCopy.Link','GetSAKeys'],
+    datasets: [{
+      label: 'P50 (ms)',
+      data: [0,13,29,18,14,9,15,5,14,53,19],
+      backgroundColor: '#58a6ff'
+    },{
+      label: 'P99 (ms)',
+      data: [32,211,1204,184,36,30,45,30,41,3048,232],
+      backgroundColor: '#f85149'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#c9d1d9' } }, title: { display: true, text: 'XStore Latency: P50 vs P99 (ms)', color: '#f0f6fc' } },
+    scales: {
+      x: { ticks: { color: '#8b949e', maxRotation: 45, font: { size: 10 } }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, type: 'logarithmic' }
+    }
+  }
+});
+</script>
+</body>
+</html>

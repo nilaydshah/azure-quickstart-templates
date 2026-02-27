@@ -1,0 +1,9 @@
+{
+    "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+    "type": "QuickStart",
+    "itemDisplayName": "Scale Test: Deploy 5000 VMs with Premium V2 SSD Data Disks",
+    "description": "Deploys 5000 Ubuntu 22.04 LTS VMs across availability zones using parallel batch ARM deployments. Each VM has 1 OS disk and 2 Premium V2 SSD (1 GiB) data disks. Includes orchestration script for automated deployment and cleanup.",
+    "summary": "Deploy 5000 VMs with Premium V2 SSD data disks using parallel ARM template batches",
+    "githubUsername": "nilaydshah",
+    "dateUpdated": "2026-02-19"
+}

@@ -1,0 +1,181 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmCount": {
+            "type": "int",
+            "defaultValue": 500,
+            "minValue": 1,
+            "maxValue": 800,
+            "metadata": {
+                "description": "Number of VMs to deploy in this batch. Max 800 (1 resource per VM with inline NIC)."
+            }
+        },
+        "startIndex": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Starting index for VM naming. Used to create unique names across batches."
+            }
+        },
+        "subnetResourceId": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource ID of the subnet to attach VMs to."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Admin username for the VMs."
+            }
+        },
+        "sshPublicKey": {
+            "type": "string",
+            "metadata": {
+                "description": "SSH public key for authentication."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2ds_v5",
+            "metadata": {
+                "description": "Size of the virtual machines."
+            }
+        },
+        "zone": {
+            "type": "string",
+            "defaultValue": "1",
+            "allowedValues": [
+                "1",
+                "2",
+                "3"
+            ],
+            "metadata": {
+                "description": "Availability zone for VMs. Required for Premium V2 SSD data disks."
+            }
+        },
+        "dataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Size of each Premium V2 SSD data disk in GB."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        }
+    },
+    "variables": {
+        "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                        "keyData": "[parameters('sshPublicKey')]"
+                    }
+                ]
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-07-01",
+            "name": "[concat('vm-', padLeft(string(add(parameters('startIndex'), copyIndex())), 5, '0'))]",
+            "location": "[parameters('location')]",
+            "zones": [
+                "[parameters('zone')]"
+            ],
+            "copy": {
+                "name": "vmLoop",
+                "count": "[parameters('vmCount')]",
+                "mode": "Parallel"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat('vm', padLeft(string(add(parameters('startIndex'), copyIndex())), 5, '0'))]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "linuxConfiguration": "[variables('linuxConfiguration')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "0001-com-ubuntu-server-jammy",
+                        "sku": "22_04-lts-gen2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        }
+                    },
+                    "dataDisks": [
+                        {
+                            "lun": 0,
+                            "name": "[concat('vm-', padLeft(string(add(parameters('startIndex'), copyIndex())), 5, '0'), '-data0')]",
+                            "createOption": "Empty",
+                            "diskSizeGB": "[parameters('dataDiskSizeGB')]",
+                            "managedDisk": {
+                                "storageAccountType": "PremiumV2_LRS"
+                            }
+                        },
+                        {
+                            "lun": 1,
+                            "name": "[concat('vm-', padLeft(string(add(parameters('startIndex'), copyIndex())), 5, '0'), '-data1')]",
+                            "createOption": "Empty",
+                            "diskSizeGB": "[parameters('dataDiskSizeGB')]",
+                            "managedDisk": {
+                                "storageAccountType": "PremiumV2_LRS"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkApiVersion": "2022-11-01",
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "[concat('nic-', padLeft(string(add(parameters('startIndex'), copyIndex())), 5, '0'))]",
+                            "properties": {
+                                "primary": true,
+                                "deleteOption": "Delete",
+                                "enableAcceleratedNetworking": false,
+                                "ipConfigurations": [
+                                    {
+                                        "name": "ipconfig1",
+                                        "properties": {
+                                            "primary": true,
+                                            "privateIPAddressVersion": "IPv4",
+                                            "subnet": {
+                                                "id": "[parameters('subnetResourceId')]"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "batchStartIndex": {
+            "type": "int",
+            "value": "[parameters('startIndex')]"
+        },
+        "batchVmCount": {
+            "type": "int",
+            "value": "[parameters('vmCount')]"
+        }
+    }
+}

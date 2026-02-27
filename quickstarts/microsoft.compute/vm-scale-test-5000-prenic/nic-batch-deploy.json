@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "nicCount": {
+            "type": "int",
+            "defaultValue": 250,
+            "minValue": 1,
+            "maxValue": 800,
+            "metadata": {
+                "description": "Number of NICs to deploy in this batch. Max 800 (ARM limit)."
+            }
+        },
+        "startIndex": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Starting index for NIC naming. Used for unique names across batches."
+            }
+        },
+        "subnetResourceId": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource ID of the subnet to attach NICs to."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-11-01",
+            "name": "[concat('nic-', padLeft(string(add(parameters('startIndex'), copyIndex())), 5, '0'))]",
+            "location": "[parameters('location')]",
+            "copy": {
+                "name": "nicLoop",
+                "count": "[parameters('nicCount')]",
+                "mode": "Parallel"
+            },
+            "properties": {
+                "enableAcceleratedNetworking": false,
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[parameters('subnetResourceId')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "batchStartIndex": {
+            "type": "int",
+            "value": "[parameters('startIndex')]"
+        },
+        "batchNicCount": {
+            "type": "int",
+            "value": "[parameters('nicCount')]"
+        }
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+    "type": "QuickStart",
+    "itemDisplayName": "5000 VM Scale Test - No NIC (Inline NIC Configuration)",
+    "description": "Deploys 5000 individual VMs with inline NIC configuration (networkInterfaceConfigurations) to eliminate ARM NIC throttling. Each VM has 1 OS disk and 2 Premium V2 SSD data disks.",
+    "summary": "Scale test deploying 5000 VMs using CRP-managed inline NIC creation to bypass ARM NIC PUT rate limits.",
+    "githubUsername": "nilaydshah",
+    "dateUpdated": "2026-02-25"
+}
