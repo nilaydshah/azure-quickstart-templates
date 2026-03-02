@@ -122,8 +122,10 @@ try {
         foreach ($u in $usage) {
             $available = $u.Limit - $u.CurrentValue
             Write-Info "$($u.Name.LocalizedValue): Using $($u.CurrentValue)/$($u.Limit) (Available: $available)"
-            if ($available -lt $requiredVCpus) {
-                Write-Failure "Insufficient quota! Need $requiredVCpus vCPUs, only $available available."
+            # Allow 1% tolerance (some VMs may still be deallocating)
+            $minRequired = [math]::Floor($requiredVCpus * 0.99)
+            if ($available -lt $minRequired) {
+                Write-Failure "Insufficient quota! Need ~$requiredVCpus vCPUs (min $minRequired), only $available available."
                 throw "Insufficient DDSv5 vCPU quota."
             }
         }
